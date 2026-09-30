@@ -1,0 +1,23 @@
+# ==========================================
+# Excluir repositorios de código fuente
+# ==========================================
+Clinica_Frontend_JavaScript/
+Clinica_Repositorio_BACKEND_DRF/
+Namspaces-DEV/
+
+# Documentación de Word o notas sueltas
+*.docx
+*.txt
+*.png
+*.jpg
+
+# Archivos de sistema y editores
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+# Variables de entorno y llaves privadas
+.env
+*.key
+*.pem
