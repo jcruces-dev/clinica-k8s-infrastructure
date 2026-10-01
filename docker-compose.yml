@@ -49,7 +49,11 @@ services:
       - db
     # Conecta el backend a la misma red interna para comunicarse con la base de datos por el nombre del servicio 'db'
     networks:
-      - app_net
+      app_net: # Asigna el contenedor a la red virtual 'app_net'
+        aliases: # Define nombres de dominio o alias DNS adicionales dentro de esta red.
+          # Permite que otros contenedores (como Nginx) encuentren este backend usando 
+          # la URL 'http://backend-service:8000' del archivo, defaul.con dedel frontend.
+          - backend-service
     # Reinicia automáticamente el contenedor si este llega a fallar o cerrarse inesperadamente
     restart: always
     # Comando ejecutado para iniciar el servidor de desarrollo de Django expuesto a todas las interfaces

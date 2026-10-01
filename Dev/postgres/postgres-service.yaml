@@ -1,0 +1,31 @@
+# Versión de la API de Kubernetes para definir un objeto de red (Service).
+apiVersion: v1
+
+# Tipo de recurso: Service (punto de acceso de red interno para los Pods).
+kind: Service
+
+# Metadatos del servicio.
+metadata:
+  # Nombre del servicio usado por el DNS interno (coincide con DB_HOST="postgres-service" en el backend).
+  name: postgres-service
+  # Namespace donde se desplegará el servicio.
+  namespace: dev
+
+# Especificación de enrutamiento y puertos del servicio.
+spec:
+  # Selector para dirigir el tráfico únicamente a los Pods de PostgreSQL.
+  selector:
+    app: postgres
+    env: dev
+
+  # Definición de los puertos expuestos.
+  ports:
+    # Protocolo de red utilizado.
+    - protocol: TCP
+      # Puerto expuesto dentro de la red del clúster.
+      port: 5432
+      # Puerto del contenedor destino.
+      targetPort: 5432
+
+  # Tipo de servicio: accesible de forma privada únicamente dentro del clúster.
+  type: ClusterIP

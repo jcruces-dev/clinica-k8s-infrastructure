@@ -1,0 +1,33 @@
+# Versión de la API para objetos de red.
+apiVersion: v1
+
+# Tipo de recurso: Service.
+kind: Service
+
+# Metadatos del Service.
+metadata:
+  # Nombre del servicio usado internamente por la red del clúster o el Ingress.
+  name: backend-service
+  # Namespace donde operará.
+  namespace: dev
+  labels:
+    app: backend
+    env: dev
+
+# Especificación de enrutamiento del Service.
+spec:
+  # Rastreará y dirigirá el tráfico a los Pods con las etiquetas app: backend y env: dev.
+  selector:
+    app: backend
+    env: dev
+
+  # Mapeo de puertos.
+  ports:
+    - protocol: TCP
+      # Puerto expuesto por el Service dentro de la red del clúster.
+      port: 8000
+      # Puerto destino en el contenedor.
+      targetPort: 8000
+
+  # Acceso interno único dentro del clúster.
+  type: ClusterIP

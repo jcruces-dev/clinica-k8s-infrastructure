@@ -3,7 +3,9 @@
 # ==========================================
 Clinica_Frontend_JavaScript/
 Clinica_Repositorio_BACKEND_DRF/
-Namspaces-DEV/
+Namespaces-DEV/
+Configuracion_Orden_Manifiestos_BACKEND/
+Configuracion_Orden_Manifiesto_FRONTEND/
 
 # Documentación de Word o notas sueltas
 *.docx

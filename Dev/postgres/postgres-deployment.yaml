@@ -1,0 +1,114 @@
+# Versión de la API de Kubernetes usada para definir un Deployment.
+apiVersion: apps/v1
+
+# Tipo de recurso: Deployment (gestiona Pods y ReplicaSets).
+kind: Deployment
+
+# Metadatos para identificar el recurso dentro del clúster.
+metadata:
+  # Nombre único del Deployment dentro del namespace.
+  name: postgres-deployment
+  # Namespace donde se desplegará el recurso.
+  namespace: dev
+  # Etiquetas para categorizar e identificar este recurso.
+  labels:
+    # Etiqueta que indica el nombre de la aplicación.
+    app: postgres
+    # Etiqueta que indica el entorno de trabajo.
+    env: dev
+
+# Especificación del comportamiento del Deployment.
+spec:
+  # Número de Pods que se mantendrán ejecutándose (1 réplica para desarrollo).
+  replicas: 1
+  # Selector que define qué Pods quedan bajo el control de este Deployment.
+  selector:
+    matchLabels:
+      # Debe coincidir exactamente con las etiquetas del template.
+      app: postgres
+      # Asegura que solo controle Pods destinados a este entorno.
+      env: dev
+
+  # Plantilla que define la estructura de los Pods que se van a crear.
+  template:
+    metadata:
+      # Etiquetas asignadas directamente a los Pods creados.
+      labels:
+        app: postgres
+        env: dev
+
+    # Especificación de los contenedores y volúmenes dentro del Pod.
+    spec:
+      # Lista de contenedores que se ejecutarán dentro de cada Pod.
+      containers:
+        # Nombre identificador del contenedor.
+        - name: postgres
+          # Imagen oficial de PostgreSQL desde Docker Hub (versión 15).
+          image: postgres:15
+          # Puertos expuestos por el contenedor.
+          ports:
+            # Puerto interno donde PostgreSQL escucha conexiones.
+            - containerPort: 5432
+
+          # Variables de entorno inyectadas para inicializar la base de datos.
+          env:
+            # Nombre de la base de datos a crear.
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  # Secret exclusivo de PostgreSQL.
+                  name: postgres-secret
+                  # Clave dentro del Secret.
+                  key: POSTGRES_DB
+
+            # Usuario administrador inicial.
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+
+            # Contraseña del usuario administrador.
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+          # Argumentos de inicio para forzar a PostgreSQL a usar archivos de configuración personalizados.
+          args:
+            - "-c"
+            - "config_file=/etc/postgresql/conf.d/postgresql.conf"
+            - "-c"
+            - "hba_file=/etc/postgresql/conf.d/pg_hba.conf"
+
+          # Puntos de montaje de volúmenes dentro del sistema de archivos del contenedor.
+          volumeMounts:
+            # Montaje del volumen persistente de datos.
+            - name: postgres-storage
+              # Ruta donde PostgreSQL almacena sus archivos de datos.
+              mountPath: /var/lib/postgresql/data
+
+            # Montaje del archivo de autenticación pg_hba.conf desde el ConfigMap.
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/conf.d/pg_hba.conf
+              subPath: pg_hba.conf
+
+            # Montaje del archivo de configuración general postgresql.conf desde el ConfigMap.
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/conf.d/postgresql.conf
+              subPath: postgresql.conf
+
+      # Definición de volúmenes disponibles para ser montados por los contenedores.
+      volumes:
+        # Volumen persistente conectado a un PersistentVolumeClaim.
+        - name: postgres-storage
+          persistentVolumeClaim:
+            # Nombre del PVC creado previamente.
+            claimName: postgres-pvc
+
+        # Volumen que expone los archivos definidos dentro de un ConfigMap.
+        - name: postgres-config-volume
+          configMap:
+            # Nombre del ConfigMap existente.
+            name: postgres-config

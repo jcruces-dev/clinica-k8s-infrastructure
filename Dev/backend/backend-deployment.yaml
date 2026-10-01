@@ -1,0 +1,113 @@
+# Versión de la API de Kubernetes para definir recursos de tipo Deployment
+apiVersion: apps/v1
+
+# Tipo de recurso: Deployment (gestiona el ciclo de vida y las réplicas del Pod del backend)
+kind: Deployment
+
+# Metadatos para la identificación del recurso dentro del clúster
+metadata:
+  # Nombre único del Deployment dentro del namespace
+  name: backend-deployment
+  # Namespace de aislamiento donde se creará el Deployment
+  namespace: dev
+  # Etiquetas asignadas al Deployment para organización y filtrado
+  labels:
+    # Identifica la aplicación
+    app: backend
+    # Identifica el entorno
+    env: dev
+
+# Especificación del comportamiento deseado para el Deployment
+spec:
+  # Cantidad de instancias/Pods idénticas que se mantendrán activas
+  replicas: 1
+  # Regla de selección para determinar qué Pods están bajo el control de este Deployment
+  selector:
+    # Coincidencia exacta de etiquetas que deben tener los Pods
+    matchLabels:
+      # Etiqueta de la aplicación
+      app: backend
+      # Etiqueta del entorno
+      env: dev
+
+  # Plantilla utilizada para construir los nuevos Pods
+  template:
+    metadata:
+      # Etiquetas que se le asignarán a cada Pod generado por la plantilla
+      labels:
+        # Debe coincidir con el selector.matchLabels
+        app: backend
+        # Debe coincidir con el selector.matchLabels
+        env: dev
+
+    spec:
+      # Secretos de autenticación necesarios para descargar imágenes de registros privados
+      imagePullSecrets:
+        # Nombre del Secret de tipo docker-registry creado para autenticar contra GHCR
+        - name: ghcr-secret
+
+      # Definición del contenedor o contenedores que se ejecutarán dentro del Pod
+      containers:
+        # Nombre del contenedor dentro del Pod
+        - name: backend
+          # Ubicación y versión (tag) de la imagen de Docker alojada en GitHub Packages
+          image: ghcr.io/jcrucesb/backend-clinica-bp:v1
+          # Lista de puertos que expone el contenedor
+          ports:
+            # Puerto en el que escucha la aplicación Django/Gunicorn
+            - containerPort: 8000
+
+          # Definición de variables de entorno inyectadas al proceso del contenedor
+          env:
+            # Variable para la clave secreta de seguridad de Django
+            - name: SECRET_KEY
+              # Indica que el valor se extrae desde un Secret
+              valueFrom:
+                # Referencia a la clave dentro del Secret
+                secretKeyRef:
+                  # Nombre del Secret origen
+                  name: backend-secret
+                  # Nombre de la clave dentro del Secret
+                  key: SECRET_KEY
+
+            # Variable para controlar el modo Debug de Django
+            - name: DEBUG
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DEBUG
+
+            # Variable con el nombre de la base de datos PostgreSQL
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: POSTGRES_DB
+
+            # Variable con el usuario conector de PostgreSQL
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: POSTGRES_USER
+
+            # Variable con la contraseña de autenticación de PostgreSQL
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: POSTGRES_PASSWORD
+
+            # Variable con el nombre DNS del servicio de la base de datos (postgres-service)
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_HOST
+
+            # Variable con el puerto de conexión a PostgreSQL (5432)
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_PORT

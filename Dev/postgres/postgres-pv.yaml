@@ -1,0 +1,27 @@
+# Versión de la API de Kubernetes para recursos de almacenamiento físico del clúster.
+apiVersion: v1
+
+# Tipo de recurso: PersistentVolume (recurso de almacenamiento físico administrado a nivel de clúster).
+kind: PersistentVolume
+
+# Metadatos que identifican de forma única este volumen en el clúster.
+metadata:
+  # Nombre identificador del PersistentVolume.
+  name: postgres-pv
+
+# Especificación de las propiedades físicas y capacidad del volumen.
+spec:
+  # Definición de la capacidad de almacenamiento asignada a este volumen.
+  capacity:
+    # Tamaño total del volumen (1 Gigabyte reservado para desarrollo).
+    storage: 1Gi
+
+  # Modos de acceso permitidos para el volumen.
+  accessModes:
+    # Permite que el volumen sea montado en modo lectura/escritura por un único nodo a la vez (ideal para BD).
+    - ReadWriteOnce
+
+  # Configuración del tipo de almacenamiento local del nodo (HostPath).
+  hostPath:
+    # Ruta absoluta en el sistema de archivos del nodo físico/máquina virtual donde se guardarán físicamente los datos.
+    path: /data/postgres-dev
