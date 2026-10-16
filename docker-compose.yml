@@ -6,7 +6,7 @@ services:
   # Usuario por defecto PostgreSQL: db, NO OLVIDAR.
   db:
     # Utiliza la imagen oficial ligera de PostgreSQL versión 15
-    image: postgres:15
+    image: postgres:18
     # Nombre asignado al contenedor de la base de datos
     container_name: postgres_db
     # Carga las variables de entorno desde la ruta exacta donde se encuentra tu archivo .env
