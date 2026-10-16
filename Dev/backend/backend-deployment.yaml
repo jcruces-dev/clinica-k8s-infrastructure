@@ -51,7 +51,7 @@ spec:
         # Nombre del contenedor dentro del Pod
         - name: backend
           # Ubicación y versión (tag) de la imagen de Docker alojada en GitHub Packages
-          image: ghcr.io/jcruces-dev/backend-clinica-bp:v2
+          image: ghcr.io/jcruces-dev/backend-clinica-bp:v1.0.1
           # Lista de puertos que expone el contenedor
           ports:
             # Puerto en el que escucha la aplicación Django/Gunicorn
