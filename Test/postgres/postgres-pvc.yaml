@@ -1,0 +1,26 @@
+# Versión de la API de Kubernetes para objetos básicos del sistema.
+apiVersion: v1
+
+# Tipo de recurso: PersistentVolumeClaim (solicitud de almacenamiento persistente por parte de la aplicación).
+kind: PersistentVolumeClaim
+
+# Metadatos que identifican de forma única esta solicitud dentro del clúster.
+metadata:
+  # Nombre único del PVC que utilizará el Deployment o StatefulSet de PostgreSQL en su sección 'volumes'.
+  name: postgres-pvc-test
+  # Namespace donde se creará el PVC (debe coincidir exactamente con el namespace de tu Deployment).
+  namespace: test
+
+# Especificación de los requerimientos de almacenamiento deseados.
+spec:
+  # Modos de acceso solicitados para el volumen.
+  accessModes:
+    # Permite que el volumen sea montado en lectura/escritura por un único nodo a la vez (ideal para bases de datos).
+    - ReadWriteOnce
+  storageClassName: "" # <--- Debe ser exactamente idéntico al del PV
+  volumeName: postgres-pv-test # Apunta explícitamente a este PV.
+  # Definición de las solicitudes de recursos de almacenamiento.
+  resources:
+    requests:
+      # Cantidad de espacio en disco que la aplicación solicita reservar (1 Gigabyte para el entorno dev).
+      storage: 1Gi

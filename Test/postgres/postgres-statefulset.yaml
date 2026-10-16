@@ -1,0 +1,121 @@
+# Versión de la API de Kubernetes para cargas de trabajo con estado (StatefulSets).
+apiVersion: apps/v1
+
+# Tipo de recurso: StatefulSet (ideal para bases de datos, garantiza orden e identidad única en los Pods).
+kind: StatefulSet
+
+# Metadatos para identificar y clasificar el recurso dentro del clúster.
+metadata:
+  # Nombre único que identificará a este StatefulSet en el namespace.
+  name: postgres-statefulset
+  # Namespace aislado donde se creará la base de datos de pruebas.
+  namespace: test
+  # Etiquetas para agrupar y filtrar este recurso mediante comandos de kubectl o monitoreo.
+  labels:
+    # Identifica que la aplicación es PostgreSQL.
+    app: postgres
+    # Define explícitamente que pertenece al entorno de Pruebas/QA.
+    env: test
+
+# Especificación del comportamiento y configuración del StatefulSet.
+spec:
+  # Nombre del Headless Service vinculado. Requisito OBLIGATORIO de un StatefulSet para proveer DNS estable a cada Pod.
+  serviceName: "postgres-service"
+  # Cantidad de instancias/Pods a mantener en ejecución (1 réplica es suficiente para test).
+  replicas: 1
+  # Selector que vincula este StatefulSet con los Pods administrados.
+  selector:
+    # Las etiquetas aquí deben coincidir exactamente con las definidas en la plantilla (template).
+    matchLabels:
+      app: postgres
+      env: test
+
+  # Plantilla (Template) que define la estructura técnica de los Pods que creará el StatefulSet.
+  template:
+    metadata:
+      # Etiquetas que se le asignarán internamente a cada Pod creado (ej: postgres-statefulset-0).
+      labels:
+        app: postgres
+        env: test
+    spec:
+      # Definición de los contenedores que se ejecutarán dentro del Pod.
+      containers:
+        # Nombre único del contenedor dentro del Pod.
+        - name: postgres
+          # Imagen oficial de PostgreSQL (versión 15) desde Docker Hub.
+          image: postgres:15
+          # Puertos que el contenedor expondrá hacia el interior del Pod.
+          ports:
+            # Puerto estándar en el que escucha el motor de PostgreSQL.
+            - containerPort: 5432
+
+          # Variables de entorno inyectadas para inicializar las credenciales de la base de datos.
+          env:
+            # Variable estándar que define el nombre de la base de datos inicial a crear.
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  # Obtiene el valor directamente desde el Secret del namespace test.
+                  name: postgres-secret
+                  # Clave dentro del Secret que contiene el nombre de la DB.
+                  key: POSTGRES_DB
+
+            # Variable estándar para el usuario administrador inicial.
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+
+            # Variable estándar para la contraseña del usuario administrador.
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+          # Parámetros de arranque del motor PostgreSQL para forzar el uso de configuraciones personalizadas.
+          args:
+            # Indicador del comando ejecutable de postgres para pasar opciones.
+            - "-c"
+            # Define la ruta absoluta donde PostgreSQL leerá su archivo de configuración general.
+            - "config_file=/etc/postgresql/conf.d/postgresql.conf"
+            # Indicador adicional de parámetro.
+            - "-c"
+            # Define la ruta absoluta para el archivo de autenticación y permisos de red HBA.
+            - "hba_file=/etc/postgresql/conf.d/pg_hba.conf"
+
+          # Puntos de montaje que conectan los volúmenes del Pod con el sistema de archivos del contenedor.
+          volumeMounts:
+            # Montaje de la persistencia de datos principal.
+            - name: postgres-storage
+              # Ruta interna obligatoria donde PostgreSQL guarda las tablas y registros de datos.
+              mountPath: /var/lib/postgresql/data
+
+            # Montaje del archivo de autenticación pg_hba.conf.
+            - name: postgres-config-volume
+              # Ruta interna del contenedor donde PostgreSQL buscará las reglas HBA.
+              mountPath: /etc/postgresql/conf.d/pg_hba.conf
+              # Inyecta solo el archivo pg_hba.conf sin sobrescribir o borrar otros archivos de esa carpeta.
+              subPath: pg_hba.conf
+
+            # Montaje del archivo de configuración general postgresql.conf.
+            - name: postgres-config-volume
+              # Ruta interna del contenedor donde se aplicará la configuración principal del motor.
+              mountPath: /etc/postgresql/conf.d/postgresql.conf
+              # Inyecta únicamente este archivo desde el ConfigMap de forma aislada.
+              subPath: postgresql.conf
+
+      # Definición de las fuentes de datos (volúmenes) disponibles para ser montadas en el Pod.
+      volumes:
+        # Volumen conectado al almacenamiento físico persistente.
+        - name: postgres-storage
+          persistentVolumeClaim:
+            # Nombre exacto del PersistentVolumeClaim exclusivo que solicitará el espacio en el entorno test.
+            claimName: postgres-pvc-test
+
+        # Volumen creado a partir de archivos de texto/configuración en Kubernetes.
+        - name: postgres-config-volume
+          configMap:
+            # Nombre del ConfigMap existente en test que contiene los archivos postgresql.conf y pg_hba.conf.
+            name: postgres-config

@@ -1,0 +1,74 @@
+apiVersion: apps/v1              # Versión de la API de Kubernetes que se usa para definir Deployments
+kind: Deployment                 # Tipo de recurso: un Deployment gestiona Pods y ReplicaSets
+
+metadata:
+  name: backend-deployment      # Nombre único del Deployment dentro del namespace
+  namespace: test               # Namespace donde se desplegará (en este caso, entorno dev)
+  labels:                       # Etiquetas para identificar este recurso
+    app: backend                # Etiqueta que indica la aplicación (backend)
+    env: test                   # Etiqueta que indica el entorno (dev)
+
+spec:
+  replicas: 1                    # Número de Pods que se crearán (1 réplica en dev para ahorrar recursos)
+  selector:                      # Selector que define qué Pods controla este Deployment
+    matchLabels:
+      app: backend               # Debe coincidir con los labels del template
+      env: test                  # Igual que arriba, asegura que solo controle Pods con estas etiquetas
+
+  template:                      # Plantilla que define cómo serán los Pods creados
+    metadata:
+      labels:                    # Etiquetas que tendrán los Pods
+        app: backend             # Coincide con el selector (app: backend)
+        env: test                # Coincide con el selector (env: dev)
+    spec:
+      imagePullSecrets:          # Secret para autenticar en GHCR y poder descargar imágenes privadas
+        - name: ghcr-secret      # Nombre del Secret de tipo docker-registry que creaste para GHCR
+
+      containers:                # Lista de contenedores dentro de cada Pod
+      - name: backend            # Nombre del contenedor
+        image: ghcr.io/jcruces-dev/backend-clinica-bp:v2   # Imagen Docker que se usará (desde GHCR con tag v1)
+        ports:
+        - containerPort: 8000    # Puerto expuesto dentro del contenedor (backend escucha en 8000)
+
+        env:                     # Variables de entorno que se inyectan desde el Secret "django-secret"
+          - name: SECRET_KEY     # Variable que Django necesita para seguridad interna
+            valueFrom:
+              secretKeyRef:
+                name: django-secret   # Nombre del Secret que contiene la clave
+                key: SECRET_KEY       # Clave dentro del Secret
+
+          - name: DEBUG          # Variable para activar/desactivar modo debug en Django
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: DEBUG
+
+          - name: POSTGRES_DB    # Nombre de la base de datos PostgreSQL
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: POSTGRES_DB
+
+          - name: POSTGRES_USER  # Usuario de la base de datos PostgreSQL
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: POSTGRES_USER
+
+          - name: POSTGRES_PASSWORD  # Contraseña del usuario de PostgreSQL
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: POSTGRES_PASSWORD
+
+          - name: DB_HOST        # Host donde está corriendo la base de datos (ej. servicio "db")
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: DB_HOST
+
+          - name: DB_PORT        # Puerto de conexión a PostgreSQL (por defecto 5432)
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: DB_PORT

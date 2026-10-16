@@ -1,17 +1,9 @@
-# Especifica la versión de la API de Cilium utilizada para recursos v2alpha1
-apiVersion: "cilium.io/v2alpha1"
-
-# Tipo de recurso personalizado (CRD) que define un grupo (pool) de direcciones IP
+# Versión actualizada según la recomendación de Cilium
+apiVersion: "cilium.io/v2"
 kind: CiliumLoadBalancerIPPool
-
-# Metadata que contiene la información de identificación del objeto
 metadata:
-  # Nombre único asignado a este grupo de IPs dentro del clúster
   name: "bgp-lb-pool"
-
-# Especificación del comportamiento y los parámetros del grupo de IPs
 spec:
-  # Lista de bloques CIDR que componen el rango de direcciones asignables
   blocks:
-    # Máscara CIDR que define el rango de IPs (de 192.168.40.200 a 192.168.40.223)
-    - cidr: "192.168.40.200/27"
+    - start: "192.168.100.200"
+      stop: "192.168.100.210"

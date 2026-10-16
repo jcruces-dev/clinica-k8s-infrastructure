@@ -1,0 +1,11 @@
+apiVersion: gateway.networking.k8s.io/v1   # Versión de la API de Gateway que habilita el recurso
+kind: Gateway                              # Tipo de recurso: Gateway define el punto de entrada al cluster
+metadata:
+  name: dev-gateway                        # Nombre único del Gateway dentro del namespace
+  namespace: dev                           # Namespace donde se crea (en tu caso dev)
+spec:
+  gatewayClassName: cilium                  # Clase de Gateway que usará.
+  listeners:                               # Lista de listeners: definen protocolos, puertos y dominios
+  - name: http                             # Nombre del listener (puede ser cualquier identificador)
+    protocol: HTTP                         # Protocolo de comunicación (HTTP en este caso)
+    port: 80                               # Puerto en el que escuchará el Gateway

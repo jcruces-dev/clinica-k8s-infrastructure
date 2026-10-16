@@ -1,15 +1,12 @@
-# Define la versión de la API de Cilium correspondiente a este recurso
-apiVersion: "cilium.io/v2alpha1"
-
-# Tipo de recurso de Cilium para controlar el anuncio de IPs por Capa 2 (ARP)
+apiVersion: cilium.io/v2alpha1
 kind: CiliumL2AnnouncementPolicy
-
-# Bloque de metadatos de identificación del objeto en Kubernetes
 metadata:
-  # Nombre descriptivo que identifica esta política L2 dentro del clúster
-  name: "l2-policy"
-
-# Especificación con la regla de funcionamiento de la política
+  name: l2-policy
 spec:
-  # Habilita el anuncio Layer 2/ARP para todas las IPs de tipo LoadBalancer
+  interfaces:
+    - "^ens33$"
+  externalIPs: true
   loadBalancerIPs: true
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: nodo-master
