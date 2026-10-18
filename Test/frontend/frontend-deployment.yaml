@@ -26,6 +26,6 @@ spec:
 
       containers:                # Lista de contenedores dentro de cada Pod
       - name: frontend           # Nombre del contenedor
-        image: ghcr.io/jcruces-dev/frontend-clinica-bp:v2   # Imagen Docker que se usará (desde GHCR con tag v1)
+        image: ghcr.io/jcruces-dev/frontend-clinica-bp:v1.0.1
         ports:
           - containerPort: 80    # Puerto expuesto dentro del contenedor (frontend escucha en 80)
