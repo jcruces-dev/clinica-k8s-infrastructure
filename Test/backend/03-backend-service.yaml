@@ -3,17 +3,22 @@ kind: Service                    # Tipo de recurso: Service expone Pods en la re
 
 metadata:
   name: backend-service          # Nombre único del Service
-  namespace: test                 # Namespace donde se creará (igual que el Deployment)
+  namespace: test                # Namespace donde se creará (igual que el Deployment)
   labels:                        # Etiquetas opcionales para identificar el Service
     app: backend                 # Coincide con el Deployment
-    env: test                     # Coincide con el Deployment
+    env: test                    # Coincide con el Deployment
 
 spec:
   selector:                      # Selector: indica qué Pods agrupa este Service
     app: backend                 # Debe coincidir con los labels de los Pods
-    env: test                     # Debe coincidir también
+    env: test                    # Debe coincidir también
   ports:
     - protocol: TCP              # Protocolo de comunicación
       port: 8000                 # Puerto expuesto por el Service dentro del cluster
       targetPort: 8000           # Puerto del contenedor (definido en el Deployment)
-  type: ClusterIP                # Tipo de Service: accesible solo dentro del cluster
+      
+  # ¡CAMBIO CRUCIAL PARA GCP!
+  # Al usar LoadBalancer, Google Cloud creará una IP pública para tu backend.
+  # Esto es necesario para que puedas probar la API y para que el frontend (que estará en otra IP) 
+  # no tenga problemas de CORS al intentar comunicarse.
+  type: LoadBalancer

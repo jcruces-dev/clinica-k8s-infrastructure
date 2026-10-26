@@ -1,0 +1,24 @@
+# Versión de la API de Kubernetes usada para definir un ConfigMap
+apiVersion: v1
+
+# Tipo de recurso: ConfigMap (almacena configuración en pares clave-valor)
+kind: ConfigMap
+
+metadata:
+  # Nombre único del ConfigMap dentro del namespace
+  name: postgres-config
+  # Namespace donde se desplegará (en este caso, test)
+  namespace: test
+
+data:
+  # Archivo de configuración principal de PostgreSQL
+  postgresql.conf: |
+    listen_addresses = '*'
+
+  # Archivo de configuración de reglas de acceso (Host-Based Authentication)
+  pg_hba.conf: |
+    # Conexiones locales (socket UNIX) → requieren contraseña
+    local   all   all   md5
+
+    # Conexiones TCP/IP externas → requieren contraseña
+    host    all   all   0.0.0.0/0   md5

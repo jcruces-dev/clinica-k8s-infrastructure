@@ -1,0 +1,29 @@
+# Versión de la API de Kubernetes para objetos básicos del sistema.
+apiVersion: v1
+
+# Tipo de recurso: PersistentVolumeClaim (solicitud de almacenamiento persistente).
+kind: PersistentVolumeClaim
+
+# Metadatos que identifican de forma única esta solicitud.
+metadata:
+  # Nombre único del PVC. (Asegúrate de que el StatefulSet apunte a este nombre exacto).
+  name: postgres-pvc-test
+  # Namespace donde se creará el PVC.
+  namespace: test
+
+# Especificación de los requerimientos de almacenamiento.
+spec:
+  # Modos de acceso solicitados para el volumen.
+  accessModes:
+    # Permite que el volumen sea montado en lectura/escritura por un único nodo a la vez.
+    - ReadWriteOnce
+  
+  # ⚠️ EN GCP: No ponemos 'storageClassName: ""' ni 'volumeName'. 
+  # Al dejarlo así, GKE (Google) usará su clase de almacenamiento por defecto (Standard) 
+  # y creará un disco duro (Persistent Disk) automáticamente para tu base de datos.
+
+  # Definición de la cantidad de espacio en disco solicitada.
+  resources:
+    requests:
+      # Cantidad de espacio en disco (1 Gigabyte para el entorno test).
+      storage: 1Gi

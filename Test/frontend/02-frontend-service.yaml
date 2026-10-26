@@ -3,17 +3,21 @@ kind: Service                    # Tipo de recurso: un Service expone Pods en la
 
 metadata:
   name: frontend-service         # Nombre único del Service dentro del namespace
-  namespace: test                 # Namespace donde se creará (igual que el Deployment)
+  namespace: test                # Namespace donde se creará (igual que el Deployment)
   labels:                        # Etiquetas opcionales para identificar el Service
     app: frontend                # Coincide con el Deployment del frontend
-    env: test                     # Coincide con el entorno (dev)
+    env: test                    # Coincide con el entorno (test)
 
 spec:
   selector:                      # Selector: indica qué Pods agrupa este Service
     app: frontend                # Debe coincidir con los labels de los Pods del frontend
-    env: test                     # Debe coincidir también
+    env: test                    # Debe coincidir también
   ports:
     - protocol: TCP              # Protocolo de comunicación (TCP en este caso)
       port: 80                   # Puerto expuesto por el Service dentro del cluster
       targetPort: 80             # Puerto del contenedor (definido en el Deployment)
-  type: ClusterIP                # Tipo de Service: accesible solo dentro del cluster
+      
+  # ¡CAMBIO CRUCIAL PARA GCP!
+  # LoadBalancer le dice a Google Cloud que cree un balanceador de carga 
+  # y le asigne una IP pública a este servicio para que sea accesible desde internet.
+  type: LoadBalancer

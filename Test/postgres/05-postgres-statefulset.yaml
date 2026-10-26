@@ -19,7 +19,7 @@ metadata:
 
 # Especificación del comportamiento y configuración del StatefulSet.
 spec:
-  # Nombre del Headless Service vinculado. Requisito OBLIGATORIO de un StatefulSet para proveer DNS estable a cada Pod.
+  # Nombre del Headless Service vinculado. Requisito OBLIGATORIO para proveer DNS estable a cada Pod.
   serviceName: "postgres-service"
   # Cantidad de instancias/Pods a mantener en ejecución (1 réplica es suficiente para test).
   replicas: 1
@@ -51,6 +51,10 @@ spec:
 
           # Variables de entorno inyectadas para inicializar las credenciales de la base de datos.
           env:
+            # ¡VARIABLE AGREGADA! Le dice a Postgres que use una subcarpeta para evitar el error de 'lost+found' en GCP.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+
             # Variable estándar que define el nombre de la base de datos inicial a crear.
             - name: POSTGRES_DB
               valueFrom:
@@ -96,7 +100,7 @@ spec:
             - name: postgres-config-volume
               # Ruta interna del contenedor donde PostgreSQL buscará las reglas HBA.
               mountPath: /etc/postgresql/conf.d/pg_hba.conf
-              # Inyecta solo el archivo pg_hba.conf sin sobrescribir o borrar otros archivos de esa carpeta.
+              # Inyecta solo el archivo pg_hba.conf sin sobrescribir otros archivos de esa carpeta.
               subPath: pg_hba.conf
 
             # Montaje del archivo de configuración general postgresql.conf.
@@ -111,8 +115,9 @@ spec:
         # Volumen conectado al almacenamiento físico persistente.
         - name: postgres-storage
           persistentVolumeClaim:
-            # Nombre exacto del PersistentVolumeClaim exclusivo que solicitará el espacio en el entorno test.
-            claimName: postgres-pvc-test
+            # Nombre exacto del PVC que solicitará el espacio. 
+            # (OJO: Asegúrate de que se llame 'postgres-pvc' en tu archivo PVC de Test).
+            claimName: postgres-pvc
 
         # Volumen creado a partir de archivos de texto/configuración en Kubernetes.
         - name: postgres-config-volume

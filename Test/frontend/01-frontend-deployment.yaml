@@ -1,0 +1,40 @@
+apiVersion: apps/v1              # Versión de la API de Kubernetes que se usa para definir Deployments
+kind: Deployment                 # Tipo de recurso: un Deployment gestiona Pods y ReplicaSets
+
+metadata:
+  name: frontend-deployment      # Nombre único del Deployment dentro del namespace
+  namespace: test                # Namespace donde se desplegará (entorno test)
+  labels:                        # Etiquetas para identificar este recurso
+    app: frontend                # Etiqueta que indica la aplicación (frontend)
+    env: test                    # Etiqueta que indica el entorno (test)
+
+spec:
+  replicas: 1                    # Número de Pods que se crearán (1 réplica para test)
+  selector:                      # Selector que define qué Pods controla este Deployment
+    matchLabels:
+      app: frontend              # Debe coincidir con los labels del template
+      env: test                  # Asegura que solo controle Pods de Test
+
+  template:                      # Plantilla que define cómo serán los Pods creados
+    metadata:
+      labels:                    # Etiquetas que tendrán los Pods
+        app: frontend            # Coincide con el selector (app: frontend)
+        env: test                # Coincide con el selector (env: test)
+    spec:
+      imagePullSecrets:          # Secret para autenticar en GHCR y poder descargar imágenes privadas
+        - name: ghcr-secret      # Nombre del Secret de tipo docker-registry
+
+      containers:                # Lista de contenedores dentro de cada Pod
+        - name: frontend         # Nombre del contenedor
+          image: ghcr.io/jcruces-dev/frontend-clinica-bp:v1.0.1 # Imagen de GHCR
+          ports:
+            - containerPort: 80  # Puerto expuesto dentro del contenedor (frontend escucha en 80)
+          
+          # ¡SECCIÓN AGREGADA! Límites de recursos (Muy importante para GCP)
+          resources:
+            requests:
+              cpu: "100m"        # Solicita 0.1 núcleos de CPU al arrancar
+              memory: "128Mi"    # Solicita 128 MB de RAM al arrancar
+            limits:
+              cpu: "500m"        # No puede usar más de 0.5 núcleos de CPU
+              memory: "256Mi"    # No puede usar más de 256 MB de RAM

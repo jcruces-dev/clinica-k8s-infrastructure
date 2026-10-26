@@ -8,15 +8,21 @@ kind: Service
 metadata:
   # Nombre del servicio usado por el DNS interno (coincide con DB_HOST="postgres-service" en el backend).
   name: postgres-service
-  # Namespace donde se desplegará el servicio.
-  namespace: dev
+  # Namespace donde se desplegará el servicio (AHORA ES TEST).
+  namespace: test
 
 # Especificación de enrutamiento y puertos del servicio.
 spec:
-  # Selector para dirigir el tráfico únicamente a los Pods de PostgreSQL.
+  # Selector para dirigir el tráfico únicamente a los Pods de PostgreSQL de Test.
   selector:
     app: postgres
-    env: dev
+    env: test
+
+  # ¡LÍNEA CRUCIAL PARA STATEFULSETS!
+  # Al poner 'None', creamos un "Headless Service". 
+  # Esto hace que Kubernetes no le asigne una IP fija, sino que le dé un nombre DNS 
+  # único a cada Pod (ej. postgres-statefulset-0.postgres-service), ideal para bases de datos.
+  clusterIP: None
 
   # Definición de los puertos expuestos.
   ports:
@@ -27,5 +33,5 @@ spec:
       # Puerto del contenedor destino.
       targetPort: 5432
 
-  # Tipo de servicio: accesible de forma privada únicamente dentro del clúster.
-  type: ClusterIP
+  # NOTA: Cuando se usa 'clusterIP: None', ya no es necesario especificar 'type: ClusterIP'.
+  # El servicio es interno por defecto.
