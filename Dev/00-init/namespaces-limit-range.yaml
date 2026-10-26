@@ -1,20 +1,47 @@
+# Versión de la API de Kubernetes para objetos básicos.
 apiVersion: v1
+
+# Tipo de recurso: LimitRange. Define los límites de recursos (CPU/RAM) 
+# para los contenedores dentro de un namespace.
 kind: LimitRange
+
+# Metadatos para identificar el recurso.
 metadata:
+  # Nombre único de este LimitRange.
   name: dev-limits
+  # Namespace donde se aplicarán estas reglas (en este caso, 'dev').
   namespace: dev
+
+# Especificación de las reglas del LimitRange.
 spec:
   limits:
-  - default:                    # Límite asignado automáticamente si el Pod no especifica
-      cpu: "300m"
-      memory: "256Mi"
-    defaultRequest:             # Solicitud asignada automáticamente si el Pod no especifica
-      cpu: "100m"
-      memory: "128Mi"
-    max:                        # Lo máximo que puede pedir un solo Pod individual
-      cpu: "500m"
-      memory: "512Mi"
-    min:                        # Lo mínimo que puede pedir un Pod
-      cpu: "50m"
-      memory: "64Mi"
-    type: Container
+  # Tipo de objeto al que se aplican las reglas (Container = a cada contenedor individual).
+  - type: Container
+    
+    # LÍMITES POR DEFECTO:
+    # Si un Pod no especifica límites de CPU o RAM en su YAML, Kubernetes
+    # le asignará automáticamente estos valores.
+    default:
+      cpu: "500m"       # 0.5 núcleos de CPU
+      memory: "512Mi"   # 512 Megabytes de RAM
+
+    # SOLICITUDES POR DEFECTO (Requests):
+    # Si un Pod no especifica cuánto necesita, se le reservará esto.
+    # Ayuda al planificador (Scheduler) a saber cuánto espacio queda libre.
+    defaultRequest:
+      cpu: "200m"       # 0.2 núcleos de CPU
+      memory: "256Mi"   # 256 Megabytes de RAM
+
+    # LÍMITE MÁXIMO (Max):
+    # Un Pod no puede pedir más de esto. Si un YAML intenta pedir 
+    # más de 1Gi de RAM, Kubernetes lo rechazará con un error.
+    max:
+      cpu: "1"          # 1 núcleo completo
+      memory: "1Gi"     # 1 Gigabyte de RAM
+
+    # LÍMITE MÍNIMO (Min):
+    # Un Pod no puede pedir menos de esto. Evita que se creen Pods
+    # con recursos absurdamente bajos que no funcionarían.
+    min:
+      cpu: "50m"        # 0.05 núcleos de CPU
+      memory: "64Mi"    # 64 Megabytes de RAM

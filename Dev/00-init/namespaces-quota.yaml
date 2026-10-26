@@ -8,8 +8,8 @@ metadata:
   namespace: dev
 spec:
   hard:
-    requests.cpu: "500m"        # Máximo acumulado a solicitar: 0.5 Cores
-    requests.memory: "512Mi"    # Máximo acumulado a solicitar: 512 MB
-    limits.cpu: "1000m"         # Máximo límite acumulado: 1 Core
-    limits.memory: "768Mi"      # Máximo límite acumulado: 768 MB
-    pods: "10"                  # Máximo 10 Pods en el namespace
+    requests.cpu: "2"        # Máximo acumulado a solicitar: 0.5 Cores
+    requests.memory: "4Gi"    # Máximo acumulado a solicitar: 512 MB
+    limits.cpu: "4"         # Máximo límite acumulado: 1 Core
+    limits.memory: "6Gi"      # Máximo límite acumulado: 768 MB
+    pods: "15"                  # Máximo 10 Pods en el namespace
