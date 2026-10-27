@@ -29,5 +29,6 @@ spec:
       # Puerto destino en el contenedor.
       targetPort: 8000
 
-  # Acceso interno único dentro del clúster.
-  type: ClusterIP
+  # ¡CAMBIO CRUCIAL PARA GCP!
+  # LoadBalancer le dice a Google Cloud que asigne una IP pública para acceder al backend.
+  type: LoadBalancer

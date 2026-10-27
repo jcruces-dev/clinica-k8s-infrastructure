@@ -8,15 +8,15 @@ kind: Service
 metadata:
   # Nombre del servicio usado por el DNS interno (coincide con DB_HOST="postgres-service" en el backend).
   name: postgres-service
-  # Namespace donde se desplegará el servicio (AHORA ES TEST).
-  namespace: test
+  # Namespace donde se desplegará el servicio (AHORA ES Dev).
+  namespace: dev
 
 # Especificación de enrutamiento y puertos del servicio.
 spec:
-  # Selector para dirigir el tráfico únicamente a los Pods de PostgreSQL de Test.
+  # Selector para dirigir el tráfico únicamente a los Pods de PostgreSQL de Dev.
   selector:
     app: postgres
-    env: test
+    env: dev
 
   # ¡LÍNEA CRUCIAL PARA STATEFULSETS!
   # Al poner 'None', creamos un "Headless Service". 

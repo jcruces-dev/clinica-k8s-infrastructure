@@ -1,166 +1,68 @@
-# Versión de la API de Kubernetes para definir recursos de tipo Deployment
 apiVersion: apps/v1
-
-# Tipo de recurso: Deployment (gestiona el ciclo de vida y las réplicas del Pod del backend)
 kind: Deployment
-
-# Metadatos para la identificación del recurso dentro del clúster
 metadata:
-  # Nombre único del Deployment dentro del namespace
-  name: backend-deployment
-  # Namespace de aislamiento donde se creará el Deployment
+  name: postgres-deployment
   namespace: dev
-  # Etiquetas asignadas al Deployment para organización y filtrado
   labels:
-    # Identifica la aplicación
-    app: backend
-    # Identifica el entorno
+    app: postgres
     env: dev
 
-# Especificación del comportamiento deseado para el Deployment
 spec:
-  # Cantidad de instancias/Pods idénticas que se mantendrán activas
   replicas: 1
-  # Regla de selección para determinar qué Pods están bajo el control de este Deployment
   selector:
-    # Coincidencia exacta de etiquetas que deben tener los Pods
     matchLabels:
-      # Etiqueta de la aplicación
-      app: backend
-      # Etiqueta del entorno
+      app: postgres
       env: dev
 
-  # Plantilla utilizada para construir los nuevos Pods
   template:
     metadata:
-      # Etiquetas que se le asignarán a cada Pod generado por la plantilla
       labels:
-        # Debe coincidir con el selector.matchLabels
-        app: backend
-        # Debe coincidir con el selector.matchLabels
+        app: postgres
         env: dev
-
     spec:
-      # Secretos de autenticación necesarios para descargar imágenes de registros privados
-      imagePullSecrets:
-        # Nombre del Secret de tipo docker-registry creado para autenticar contra GHCR
-        - name: ghcr-secret
-
-      # Definición del contenedor o contenedores que se ejecutarán dentro del Pod
       containers:
-        # Nombre del contenedor dentro del Pod
-        - name: backend
-          # Ubicación y versión (tag) de la imagen de Docker alojada en GitHub Packages
-          image: ghcr.io/jcruces-dev/backend-clinica-bp:v2
-          # Lista de puertos que expone el contenedor
+        - name: postgres
+          image: postgres:15
           ports:
-            # Puerto en el que escucha la aplicación Django/Gunicorn
-            - containerPort: 8000
-
-          # Definición de variables de entorno inyectadas al proceso del contenedor
+            - containerPort: 5432
+          
           env:
-            # Variable para la clave secreta de seguridad de Django
-            - name: SECRET_KEY
-              # Indica que el valor se extrae desde un Secret
-              valueFrom:
-                # Referencia a la clave dentro del Secret
-                secretKeyRef:
-                  # Nombre del Secret origen
-                  name: backend-secret
-                  # Nombre de la clave dentro del Secret
-                  key: SECRET_KEY
-
-            # Variable para controlar el modo Debug de Django
-            - name: DEBUG
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: DEBUG
-
-            # Variable con el nombre de la base de datos PostgreSQL
+            # SOLUCIÓN PARA GCP: Evita el error de la carpeta 'lost+found'
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            
+            # Credenciales obtenidas desde el Secret de Postgres
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: postgres-secret
                   key: POSTGRES_DB
-
-            # Variable con el usuario conector de PostgreSQL
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: postgres-secret
                   key: POSTGRES_USER
-
-            # Variable con la contraseña de autenticación de PostgreSQL
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: postgres-secret
                   key: POSTGRES_PASSWORD
 
-            # Variable con el nombre DNS del servicio de la base de datos (postgres-service)
-            - name: DB_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: DB_HOST
+          # Montaje del disco y la configuración
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/conf.d/postgresql.conf
+              subPath: postgresql.conf
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/conf.d/pg_hba.conf
+              subPath: pg_hba.conf
 
-            # Variable con el puerto de conexión a PostgreSQL (5432)
-            - name: DB_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: DB_PORT
-
-            # ==========================================================
-            # VARIABLES AGREGADAS (Correo y Stripe)
-            # ==========================================================
-
-            # Backend de correo electrónico (SMTP)
-            - name: EMAIL_BACKEND
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: EMAIL_BACKEND
-
-            # Servidor SMTP de correo (Gmail)
-            - name: EMAIL_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: EMAIL_HOST
-
-            # Puerto del servidor SMTP
-            - name: EMAIL_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: EMAIL_PORT
-
-            # Habilitar seguridad TLS para el correo
-            - name: EMAIL_USE_TLS
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: EMAIL_USE_TLS
-
-            # Cuenta de correo remitente
-            - name: EMAIL_HOST_USER
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: EMAIL_HOST_USER
-
-            # Contraseña de aplicación del correo
-            - name: EMAIL_HOST_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: EMAIL_HOST_PASSWORD
-
-            # Llave secreta de la pasarela de pagos Stripe
-            - name: STRIPE_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secret
-                  key: STRIPE_SECRET_KEY
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: postgres-config-volume
+          configMap:
+            name: postgres-config
