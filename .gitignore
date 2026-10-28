@@ -6,7 +6,8 @@ Clinica_Repositorio_BACKEND_DRF/
 Namespaces-DEV/
 Configuracion_Orden_Manifiestos_BACKEND/
 Configuracion_Orden_Manifiesto_FRONTEND/
-
+# Carpeta de los comandos de automatizacion de .yaml en GCP; Dev y Test
+scripts/
 # Documentación de Word o notas sueltas
 *.docx
 *.txt

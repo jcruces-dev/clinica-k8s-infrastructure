@@ -117,7 +117,7 @@ spec:
           persistentVolumeClaim:
             # Nombre exacto del PVC que solicitará el espacio. 
             # (OJO: Asegúrate de que se llame 'postgres-pvc' en tu archivo PVC de Test).
-            claimName: postgres-pvc
+            claimName: postgres-pvc-test
 
         # Volumen creado a partir de archivos de texto/configuración en Kubernetes.
         - name: postgres-config-volume
