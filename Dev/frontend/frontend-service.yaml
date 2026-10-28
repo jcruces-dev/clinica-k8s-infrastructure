@@ -16,4 +16,4 @@ spec:
     - protocol: TCP              # Protocolo de comunicación (TCP en este caso)
       port: 80                   # Puerto expuesto por el Service dentro del cluster
       targetPort: 80             # Puerto del contenedor (definido en el Deployment)
-  type: ClusterIP                # Tipo de Service: accesible solo dentro del cluster
+  type: LoadBalancer                # Tipo de Service: accesible solo dentro del cluster
