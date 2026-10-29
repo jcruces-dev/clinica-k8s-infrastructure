@@ -1,0 +1,15 @@
+# ==========================================================
+# CONFIGURACIÓN PARA EL NAMESPACE: test
+# ==========================================================
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: test-quota
+  namespace: test
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: "2Gi"
+    limits.cpu: "2"
+    limits.memory: "3Gi"
+    pods: "20"
