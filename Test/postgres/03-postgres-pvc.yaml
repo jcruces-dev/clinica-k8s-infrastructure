@@ -7,7 +7,7 @@ kind: PersistentVolumeClaim
 # Metadatos que identifican de forma única esta solicitud.
 metadata:
   # Nombre único del PVC. (Asegúrate de que el StatefulSet apunte a este nombre exacto).
-  name: postgres-pvc-test
+  name: postgres-pvc-test-v2
   # Namespace donde se creará el PVC.
   namespace: test
 
