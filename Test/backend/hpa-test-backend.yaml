@@ -1,0 +1,22 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: test
+spec:
+  # A qué Deployment va a escalar
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-deployment
+  # Límites de réplicas (mínimo 1 para no apagar todo, máximo 5 para no gastar de más)
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        # Si el uso promedio de CPU de los Pods supera el 50%, se crean más réplicas
+        averageUtilization: 50
