@@ -26,7 +26,7 @@ spec:
 
       containers:
         - name: backend
-          image: ghcr.io/jcruces-dev/backend-clinica-bp:7ed0101e0e7fd5573c1526b5aa15d91ff3a14886
+          image: ghcr.io/jcruces-dev/backend-clinica-bp:032756d57a30c0ce3b5fcb51f7b6eb53c05f13c2
           ports:
             - containerPort: 8000 # Puerto expuesto por Django
 
