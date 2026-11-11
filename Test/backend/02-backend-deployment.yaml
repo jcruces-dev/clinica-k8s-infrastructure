@@ -1,45 +1,54 @@
-apiVersion: apps/v1              # Versión de la API de Kubernetes para Deployments
-kind: Deployment                 # Tipo de recurso: Deployment
+# Versión de la API de Kubernetes para definir Deployments.
+apiVersion: apps/v1
 
+# Tipo de recurso: Deployment.
+kind: Deployment
+
+# Metadatos del recurso.
 metadata:
-  name: backend-deployment       # Nombre único del Deployment
-  namespace: test                # Namespace donde se desplegará (test)
-  labels:                        # Etiquetas para identificar el recurso
-    app: backend                 # Etiqueta de la aplicación
-    env: test                    # Etiqueta del entorno
+  name: backend-deployment
+  # Namespace de pruebas.
+  namespace: test
+  labels:
+    app: backend
+    env: test
 
+# Especificación del Deployment.
 spec:
-  replicas: 1                    # Número de Pods (1 réplica para test)
-  selector:                      # Selector que define qué Pods controla
+  # 1 réplica para pruebas.
+  replicas: 1
+  
+  selector:
     matchLabels:
       app: backend
       env: test
 
-  template:                      # Plantilla para crear los Pods
+  template:
     metadata:
       labels:
         app: backend
         env: test
     spec:
-      imagePullSecrets:          # Secret para descargar la imagen de GHCR
-        - name: ghcr-secret      # Nombre del Secret de docker-registry
+      imagePullSecrets:
+        - name: ghcr-secret
 
       containers:
         - name: backend
-          image: ghcr.io/jcruces-dev/backend-clinica-bp:d511ed46115fd95a588f8e58abca58c25a950f3d
+          # Imagen del backend.
+          image: ghcr.io/jcruces-dev/backend-clinica-bp:v1.0.1
           ports:
-            - containerPort: 8000 # Puerto expuesto por Django
+            - containerPort: 8000
 
-          env:                   # Variables de entorno
-            # 1. SOLUCIÓN PARA GCP (Almacenamiento y Red)
-            - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
+          env:
+            # En Test también permitimos todo para pruebas.
             - name: ALLOWED_HOSTS
               value: "*"
             - name: CORS_ALLOW_ALL_ORIGINS
               value: "True"
-
-            # 2. CONEXIÓN A LA BASE DE DATOS (Usando backend-secret)
+            
+            # (Nota: Eliminé la variable PGDATA que tenías aquí porque es exclusiva de la BD, no del backend).
+            
+            # Inyección de secretos.
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -75,8 +84,6 @@ spec:
                 secretKeyRef:
                   name: backend-secret
                   key: DB_PORT
-
-            # 3. VARIABLES DE CORREO Y STRIPE
             - name: EMAIL_BACKEND
               valueFrom:
                 secretKeyRef:
@@ -112,12 +119,12 @@ spec:
                 secretKeyRef:
                   name: backend-secret
                   key: STRIPE_SECRET_KEY
-
-          # 4. LÍMITES DE RECURSOS (Buena práctica)
+          
+          # Recursos asignados (coinciden con el LimitRange de Test).
           resources:
             requests:
               cpu: "100m"
-              memory: "256Mi"
+              memory: "128Mi"
             limits:
               cpu: "500m"
               memory: "512Mi"

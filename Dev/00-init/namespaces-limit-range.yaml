@@ -1,82 +1,47 @@
 # Versión de la API de Kubernetes utilizada para crear recursos básicos.
 apiVersion: v1
 
-# Tipo de recurso que se va a crear.
-# LimitRange permite definir límites mínimos, máximos y valores por defecto
-# para CPU y memoria dentro de un Namespace.
+# Tipo de recurso: LimitRange.
 kind: LimitRange
 
 # Metadatos del recurso.
 metadata:
-
-  # Nombre que tendrá este LimitRange dentro del Namespace.
+  # Nombre del LimitRange.
   name: app-limits
 
-  # Namespace donde se aplicarán las reglas definidas en este LimitRange.
-  # Todos los Pods y Deployments creados en este Namespace estarán sujetos
-  # a estas restricciones.
+  # Namespace de desarrollo.
   namespace: dev
 
-# Configuración principal del LimitRange.
+# Configuración principal.
 spec:
-
-  # Lista de reglas que se aplicarán.
   limits:
-
-  # Indica que las reglas aplican a cada contenedor individual.
-  # Si un Pod contiene varios contenedores, cada uno será validado
-  # de forma independiente.
+  # Regla aplicada a cada contenedor individual.
   - type: Container
 
-    # Valores Request por defecto.
-    # Se asignarán automáticamente si el Deployment o Pod
-    # no declara resources.requests.
+    # Valores por defecto para requests (Dev es ligero).
     defaultRequest:
-
-      # Reserva mínima de CPU que Kubernetes garantizará
-      # para este contenedor.
-      # 100m = 0.1 vCPU.
-      cpu: "100m"
-
-      # Reserva mínima de memoria garantizada para el contenedor.
-      # 128Mi = 128 Megabytes.
-      memory: "128Mi"
-
-    # Valores Limit por defecto.
-    # Se asignarán automáticamente si el Deployment o Pod
-    # no declara resources.limits.
-    default:
-
-      # Máximo de CPU que podrá consumir el contenedor.
-      # 500m = 0.5 vCPU.
-      cpu: "500m"
-
-      # Máximo de memoria que podrá consumir el contenedor.
-      # Si intenta superar este valor, Kubernetes puede finalizarlo
-      # por falta de memoria (OOMKilled).
-      memory: "512Mi"
-
-    # Recursos mínimos permitidos.
-    # Kubernetes rechazará cualquier Deployment o Pod
-    # que intente declarar recursos inferiores a estos valores.
-    min:
-
-      # CPU mínima permitida para un contenedor.
       # 50m = 0.05 vCPU.
       cpu: "50m"
-
-      # Memoria mínima permitida para un contenedor.
+      # 64Mi de memoria.
       memory: "64Mi"
 
-    # Recursos máximos permitidos.
-    # Kubernetes rechazará cualquier Deployment o Pod
-    # que intente solicitar más recursos de los definidos aquí.
+    # Valores por defecto para limits.
+    default:
+      # 250m = 0.25 vCPU.
+      cpu: "250m"
+      # 256Mi de memoria.
+      memory: "256Mi"
+
+    # Límites mínimos permitidos.
+    min:
+      # 20m de CPU.
+      cpu: "20m"
+      # 32Mi de RAM.
+      memory: "32Mi"
+
+    # Límites máximos permitidos para un solo contenedor en Dev.
     max:
-
-      # CPU máxima que un contenedor puede declarar.
-      # 2 = 2 vCPU completas.
-      cpu: "2"
-
-      # Memoria máxima que un contenedor puede declarar.
-      # 2Gi = 2 Gigabytes de RAM.
-      memory: "2Gi"
+      # 500m. Evita que un solo contenedor se coma toda la cuota de Dev.
+      cpu: "500m"
+      # 512Mi de RAM.
+      memory: "512Mi"

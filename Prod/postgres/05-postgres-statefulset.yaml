@@ -1,0 +1,123 @@
+# Versión de la API de Kubernetes para cargas de trabajo con estado.
+apiVersion: apps/v1
+
+# Tipo de recurso: StatefulSet.
+kind: StatefulSet
+
+# Metadatos del recurso.
+metadata:
+  # Nombre único del StatefulSet.
+  name: postgres-statefulset
+  # 👇 CORRECCIÓN CRÍTICA: Apunta al namespace de producción.
+  namespace: prod
+  # 👇 CORRECCIÓN CRÍTICA: Etiqueta de entorno actualizada.
+  labels:
+    app: postgres
+    env: prod
+
+# Especificación del comportamiento del StatefulSet.
+spec:
+  # Nombre del Headless Service vinculado.
+  serviceName: "postgres-service"
+  # 1 réplica es lo estándar para bases de datos sin replicación (Primary).
+  replicas: 1
+  
+  # Selector que vincula el StatefulSet con los Pods.
+  selector:
+    matchLabels:
+      app: postgres
+      env: prod
+
+  # Plantilla para crear los Pods.
+  template:
+    metadata:
+      labels:
+        app: postgres
+        env: prod
+    spec:
+      # Definición del contenedor.
+      containers:
+        - name: postgres
+          # Imagen oficial de PostgreSQL.
+          image: postgres:15
+          # Puerto expuesto.
+          ports:
+            - containerPort: 5432
+
+          # Variables de entorno.
+          env:
+            # Evita el error de la carpeta 'lost+found' en GCP.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            # Credenciales desde el Secret de PRODUCCIÓN.
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+          # Parámetros de arranque para usar configuraciones personalizadas.
+          args:
+            - "-c"
+            - "config_file=/etc/postgresql/conf.d/postgresql.conf"
+            - "-c"
+            - "hba_file=/etc/postgresql/conf.d/pg_hba.conf"
+
+          # 👇 MEJORA: Sondas de salud.
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          # 👇 MEJORA: Recursos asignados (coinciden con el LimitRange de Prod).
+          # Le damos más RAM y CPU porque manejará datos reales.
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+
+          # Montaje de volúmenes.
+          volumeMounts:
+            # Volumen de datos.
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            # Archivo de configuración pg_hba.conf.
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/conf.d/pg_hba.conf
+              subPath: pg_hba.conf
+            # Archivo de configuración postgresql.conf.
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/conf.d/postgresql.conf
+              subPath: postgresql.conf
+
+      # Definición de volúmenes.
+      volumes:
+        # Volumen conectado al almacenamiento persistente.
+        - name: postgres-storage
+          persistentVolumeClaim:
+            # El nombre del disco debe ser de producción.
+            # (Cuando se crea el PVC de prod, asegurarme de llamarlo de esta forma).
+            claimName: postgres-pvc-prod
+        # Volumen del ConfigMap.
+        - name: postgres-config-volume
+          configMap:
+            name: postgres-config

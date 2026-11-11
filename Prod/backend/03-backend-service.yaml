@@ -1,0 +1,38 @@
+# Versión de la API para objetos de red básicos.
+apiVersion: v1
+
+# Tipo de recurso: Service.
+kind: Service
+
+# Metadatos del Service.
+metadata:
+  # Nombre del servicio.
+  name: backend-service
+  # 👇 CORRECCIÓN CRÍTICA: Ahora apunta a Prod.
+  namespace: prod
+  # Etiquetas.
+  labels:
+    app: backend
+    env: prod
+
+# Especificación de enrutamiento.
+spec:
+  # Selector: Enruta a los Pods de Producción.
+  selector:
+    app: backend
+    env: prod
+
+  # Configuración de los puertos.
+  ports:
+    - protocol: TCP
+      # Puerto expuesto internamente.
+      port: 8000
+      # Puerto del contenedor.
+      targetPort: 8000
+
+  # Seguridad: En Prod usamos ClusterIP (no LoadBalancer). Esto significa que el backend NO tendrá IP pública.
+  # Será 100% privado y seguro. El frontend se comunicará con él usando 'http://backend-service:8000' 
+  # (DNS interno). Solo el frontend tendrá la IP pública para los usuarios.
+  # En Prod usamos ClusterIP (no LoadBalancer). Esto significa que 
+  # el backend NO tendrá IP pública. Será 100% privado y seguro.
+  type: ClusterIP

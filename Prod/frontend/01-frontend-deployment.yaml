@@ -1,0 +1,73 @@
+# Versión de la API de Kubernetes para definir Deployments.
+apiVersion: apps/v1
+
+# Tipo de recurso: Deployment.
+kind: Deployment
+
+# Metadatos del recurso.
+metadata:
+  # Nombre del Deployment.
+  name: frontend-deployment
+  # 👇 CORRECCIÓN CRÍTICA: Ahora apunta al namespace de producción.
+  namespace: prod
+  # Etiquetas para identificar el recurso.
+  labels:
+    app: frontend
+    # 👇 CORRECCIÓN CRÍTICA: Etiqueta de entorno actualizada.
+    env: prod
+
+# Especificación del Deployment.
+spec:
+  # 👇 CORRECCIÓN PROD: 3 réplicas para garantizar que la web nunca se caiga.
+  replicas: 3
+  
+  # Selector que vincula el Deployment con los Pods.
+  selector:
+    matchLabels:
+      app: frontend
+      env: prod
+
+  # Plantilla para crear los Pods.
+  template:
+    metadata:
+      labels:
+        app: frontend
+        env: prod
+    spec:
+      # Secreto para descargar la imagen privada de GHCR.
+      imagePullSecrets:
+        - name: ghcr-secret
+
+      # Definición de los contenedores.
+      containers:
+        - name: frontend
+          # Imagen del frontend (Nginx).
+          image: ghcr.io/jcruces-dev/frontend-clinica-bp:v1.0.1
+          ports:
+            - containerPort: 80
+            
+          # Agregamos Health Checks (Sondas) para Nginx.
+          # Liveness: Si Nginx falla, Kubernetes lo reinicia.
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            
+          # Readiness: Si Nginx está saturado y no responde, K8s le quita el tráfico.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            
+          # Recursos ajustados al LimitRange y Quota de Prod.
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"

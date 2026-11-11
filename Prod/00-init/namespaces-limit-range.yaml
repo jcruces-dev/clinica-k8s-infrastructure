@@ -1,0 +1,47 @@
+# Versión de la API de Kubernetes utilizada para crear recursos básicos.
+apiVersion: v1
+
+# Tipo de recurso: LimitRange.
+kind: LimitRange
+
+# Metadatos del recurso.
+metadata:
+  # Nombre del LimitRange.
+  name: app-limits
+
+  # Namespace de producción.
+  namespace: prod
+
+# Configuración principal.
+spec:
+  limits:
+  # Regla aplicada a cada contenedor individual.
+  - type: Container
+
+    # Valores por defecto para requests (Prod necesita más margen).
+    defaultRequest:
+      # 250m = 0.25 vCPU.
+      cpu: "250m"
+      # 256Mi de memoria.
+      memory: "256Mi"
+
+    # Valores por defecto para limits.
+    default:
+      # 1000m = 1 vCPU.
+      cpu: "1000m"
+      # 1Gi de memoria.
+      memory: "1Gi"
+
+    # Límites mínimos permitidos.
+    min:
+      # 100m de CPU.
+      cpu: "100m"
+      # 128Mi de RAM.
+      memory: "128Mi"
+
+    # Límites máximos permitidos para un solo contenedor en Prod.
+    max:
+      # 1.5 vCPU. Ajustado a la cuota total de Prod.
+      cpu: "1500m"
+      # 1.5Gi de RAM.
+      memory: "1.5Gi"

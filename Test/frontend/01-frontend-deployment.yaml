@@ -1,40 +1,55 @@
-apiVersion: apps/v1              # Versión de la API de Kubernetes que se usa para definir Deployments
-kind: Deployment                 # Tipo de recurso: un Deployment gestiona Pods y ReplicaSets
+# Versión de la API de Kubernetes para definir Deployments.
+apiVersion: apps/v1
 
+# Tipo de recurso: Deployment.
+kind: Deployment
+
+# Metadatos del recurso.
 metadata:
-  name: frontend-deployment      # Nombre único del Deployment dentro del namespace
-  namespace: test                # Namespace donde se desplegará (entorno test)
-  labels:                        # Etiquetas para identificar este recurso
-    app: frontend                # Etiqueta que indica la aplicación (frontend)
-    env: test                    # Etiqueta que indica el entorno (test)
+  # Nombre del Deployment.
+  name: frontend-deployment
+  # Namespace de pruebas.
+  namespace: test
+  # Etiquetas para identificar el recurso.
+  labels:
+    app: frontend
+    env: test
 
+# Especificación del Deployment.
 spec:
-  replicas: 1                    # Número de Pods que se crearán (1 réplica para test)
-  selector:                      # Selector que define qué Pods controla este Deployment
+  # 1 réplica para el entorno de pruebas.
+  replicas: 1
+  
+  # Selector que vincula el Deployment con los Pods.
+  selector:
     matchLabels:
-      app: frontend              # Debe coincidir con los labels del template
-      env: test                  # Asegura que solo controle Pods de Test
+      app: frontend
+      env: test
 
-  template:                      # Plantilla que define cómo serán los Pods creados
+  # Plantilla para crear los Pods.
+  template:
     metadata:
-      labels:                    # Etiquetas que tendrán los Pods
-        app: frontend            # Coincide con el selector (app: frontend)
-        env: test                # Coincide con el selector (env: test)
+      labels:
+        app: frontend
+        env: test
     spec:
-      imagePullSecrets:          # Secret para autenticar en GHCR y poder descargar imágenes privadas
-        - name: ghcr-secret      # Nombre del Secret de tipo docker-registry
+      # Secreto para descargar la imagen privada de GHCR.
+      imagePullSecrets:
+        - name: ghcr-secret
 
-      containers:                # Lista de contenedores dentro de cada Pod
-        - name: frontend         # Nombre del contenedor
-          image: ghcr.io/jcruces-dev/frontend-clinica-bp:v1.0.1 # Imagen de GHCR
+      # Definición de los contenedores.
+      containers:
+        - name: frontend
+          # Imagen del frontend (Nginx).
+          image: ghcr.io/jcruces-dev/frontend-clinica-bp:v1.0.1
           ports:
-            - containerPort: 80  # Puerto expuesto dentro del contenedor (frontend escucha en 80)
-          
-          # ¡SECCIÓN AGREGADA! Límites de recursos (Muy importante para GCP)
+            - containerPort: 80
+            
+          # Límites de recursos ajustados al LimitRange de Test.
           resources:
             requests:
-              cpu: "100m"        # Solicita 0.1 núcleos de CPU al arrancar
-              memory: "128Mi"    # Solicita 128 MB de RAM al arrancar
+              cpu: "100m"
+              memory: "128Mi"
             limits:
-              cpu: "500m"        # No puede usar más de 0.5 núcleos de CPU
-              memory: "256Mi"    # No puede usar más de 256 MB de RAM
+              cpu: "500m"
+              memory: "512Mi"

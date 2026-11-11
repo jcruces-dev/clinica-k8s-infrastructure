@@ -1,88 +1,102 @@
-# Definición de contenedores para el proyecto Clínica Buen Paciente.
+# Nombre del proyecto en Docker Compose. Sirve para agrupar los contenedores bajo un mismo nombre.
 name: clinica_buenpaciente
 
+# Aquí comienza la definición de los contenedores (servicios).
 services:
+
+  # ==============================================================================
   # 1. Base de Datos PostgreSQL
-  # Usuario por defecto PostgreSQL: db, NO OLVIDAR.
+  # ==============================================================================
   db:
-    # Utiliza la imagen oficial ligera de PostgreSQL versión 15
+    # Utiliza la imagen oficial de PostgreSQL versión 18.
     image: postgres:18
-    # Nombre asignado al contenedor de la base de datos
+    # Nombre que tendrá el contenedor en el sistema (lo verás en Docker Desktop).
     container_name: postgres_db
-    # Carga las variables de entorno desde la ruta exacta donde se encuentra tu archivo .env
+    # Carga las variables de entorno (usuario, contraseña, nombre de BD) desde el archivo .env.
     env_file:
       - ./Clinica_Repositorio_BACKEND_DRF/Clinica_DRF/.env
-    # Mapea las variables de entorno estándar que espera PostgreSQL utilizando las de tu archivo .env
-    # environment:
-    #   - POSTGRES_DB=${POSTGRES_DB}
-    #   - POSTGRES_USER=${POSTGRES_USER}
-    #   - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    # Persistencia de los datos de la BD en un volumen de Docker para no perder información al apagar el contenedor
+    # Persistencia de los datos: guarda los datos de la BD en un volumen de Docker.
     volumes:
-      - db_data:/var/lib/postgresql/data
-    # Conecta el servicio de base de datos a la red privada interna de Docker
+      # Ruta actualizada y requerida para PostgreSQL 18 (¡el cambio que solucionamos!).
+      - db_data:/var/lib/postgresql
+    # Conecta este contenedor a la red interna de Docker llamada "app_net".
     networks:
       - app_net
+    # Política de reinicio: Docker lo enciende solo cuando enciendes Docker Desktop, a menos que lo apagues manualmente.
+    restart: unless-stopped
 
+  # ==============================================================================
   # 2. Backend de Django REST Framework
+  # ==============================================================================
   backend:
-    # Ruta hacia la carpeta del Backend donde Docker buscará el Dockerfile para construir la imagen
-    build: ./Clinica_Repositorio_BACKEND_DRF
-    # Nombre asignado al contenedor del backend de Django
+    # Configuración para construir la imagen de este servicio.
+    build: 
+      # Ruta donde se encuentra el código y el Dockerfile del backend.
+      context: ./Clinica_Repositorio_BACKEND_DRF
+      # Le dice a Docker que use la etapa "development" de tu Multi-Stage Dockerfile (la que tiene Pytest).
+      target: development
+    # Nombre asignado al contenedor del backend.
     container_name: drf_backend_clinica
-    # Establece el directorio de trabajo predeterminado dentro del contenedor
+    # Establece el directorio de trabajo interno dentro del contenedor.
     working_dir: /app
-    # Carga las variables de entorno desde la ruta exacta donde se encuentra tu archivo .env
+    # Carga las variables de entorno desde el archivo .env del backend.
     env_file:
       - ./Clinica_Repositorio_BACKEND_DRF/Clinica_DRF/.env
-    # Sobrescribe DB_HOST para que Django no busque en '127.0.0.1', sino en el contenedor 'db' a través del DNS interno de Docker
+    # Sobrescribe variables de entorno específicas para este contenedor.
     environment:
+      # Le dice a Django que busque la BD en el contenedor llamado "db", no en localhost.
       - DB_HOST=db
-    # Sincroniza el código fuente local con el contenedor para permitir cambios en vivo durante el desarrollo
+    # Sincroniza el código de tu computadora con el contenedor (para ver cambios en vivo sin reiniciar).
     volumes:
       - "./Clinica_Repositorio_BACKEND_DRF:/app"
-    # Mapea el puerto 8000 de tu computadora (host) con el puerto 8000 dentro del contenedor
+    # Mapea el puerto 8000 de tu PC al puerto 8000 del contenedor (para entrar desde el navegador).
     ports:
       - "8000:8000"
-    # Garantiza que el contenedor de PostgreSQL arranque antes que el contenedor de Django
+    # Indica que el contenedor "db" debe iniciarse antes que este.
     depends_on:
       - db
-    # Conecta el backend a la misma red interna para comunicarse con la base de datos por el nombre del servicio 'db'
+    # Conecta el backend a la red interna y le da un alias.
     networks:
-      app_net: # Asigna el contenedor a la red virtual 'app_net'
-        aliases: # Define nombres de dominio o alias DNS adicionales dentro de esta red.
-          # Permite que otros contenedores (como Nginx) encuentren este backend usando 
-          # la URL 'http://backend-service:8000' del archivo, defaul.con dedel frontend.
+      app_net:
+        aliases:
+          # Permite que Nginx (el frontend) encuentre este backend usando la URL 'http://backend-service:8000'.
           - backend-service
-    # Reinicia automáticamente el contenedor si este llega a fallar o cerrarse inesperadamente
-    restart: always
-    # Comando ejecutado para iniciar el servidor de desarrollo de Django expuesto a todas las interfaces
+    # Reinicia el contenedor automáticamente si falla o al iniciar Docker.
+    restart: unless-stopped
+    # El comando exacto que se ejecutará al encender el contenedor (inicia el servidor de desarrollo de Django).
     command: python Clinica_DRF/manage.py runserver 0.0.0.0:8000
 
+  # ==============================================================================
   # 3. Frontend Web en Nginx
+  # ==============================================================================
   frontend:
-    # Ruta hacia la carpeta del Frontend donde Docker buscará el Dockerfile y default.conf
+    # Ruta donde está el Dockerfile del frontend.
     build: ./Clinica_Frontend_JavaScript
-    # Nombre asignado al contenedor del servidor web Nginx
+    # Nombre asignado al contenedor del servidor web.
     container_name: nginx_frontend_clinica
-    # Mapea el puerto 80 de tu computadora (host) con el puerto 80 del servidor Nginx dentro del contenedor
+    # Mapea el puerto 80 de tu PC al puerto 80 del contenedor (para entrar por http://localhost).
     ports:
       - "80:80"
-    # Mapea en modo lectura (ro) los archivos estáticos HTML/JS/CSS dentro del directorio público de Nginx
+    # Monta los archivos estáticos (HTML/JS) en modo lectura (ro) dentro de Nginx.
     volumes:
       - "./Clinica_Frontend_JavaScript/Clinica_HTML:/usr/share/nginx/html:ro"
-    # Conecta el frontend a la red interna para permitir que Nginx reenvíe peticiones /api/ al backend
+    # Conecta el frontend a la red interna.
     networks:
       - app_net
-    # Garantiza que el backend esté arriba antes de iniciar Nginx
+    # Indica que el backend debe iniciarse antes que el frontend.
     depends_on:
       - backend
+    # Reinicia el contenedor automáticamente.
+    restart: unless-stopped
 
-# Definición del volumen de almacenamiento persistente para la base de datos
+# ==============================================================================
+# DEFINICIONES GLOBALES
+# ==============================================================================
+# Define el volumen para que los datos de la BD no se borren al apagar el contenedor.
 volumes:
   db_data:
 
-# Red interna privada compartida de tipo 'bridge' para permitir resolución de nombres DNS entre los contenedores
+# Define la red interna para que los contenedores se comuniquen entre sí de forma aislada.
 networks:
   app_net:
     driver: bridge

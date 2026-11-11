@@ -1,4 +1,4 @@
-# Versión de la API para objetos de red.
+# Versión de la API para objetos de red básicos.
 apiVersion: v1
 
 # Tipo de recurso: Service.
@@ -6,29 +6,29 @@ kind: Service
 
 # Metadatos del Service.
 metadata:
-  # Nombre del servicio usado internamente por la red del clúster o el Ingress.
+  # Nombre del servicio (usado por el frontend para llamar al backend).
   name: backend-service
-  # Namespace donde operará.
+  # Namespace de desarrollo.
   namespace: dev
+  # Etiquetas para identificar el recurso.
   labels:
     app: backend
     env: dev
 
-# Especificación de enrutamiento del Service.
+# Especificación de enrutamiento.
 spec:
-  # Rastreará y dirigirá el tráfico a los Pods con las etiquetas app: backend y env: dev.
+  # Selector: Enruta el tráfico a los Pods que tengan estas etiquetas.
   selector:
     app: backend
     env: dev
 
-  # Mapeo de puertos.
+  # Configuración de los puertos.
   ports:
     - protocol: TCP
-      # Puerto expuesto por el Service dentro de la red del clúster.
+      # Puerto expuesto dentro del clúster.
       port: 8000
-      # Puerto destino en el contenedor.
+      # Puerto del contenedor de destino.
       targetPort: 8000
 
-  # ¡CAMBIO CRUCIAL PARA GCP!
-  # LoadBalancer le dice a Google Cloud que asigne una IP pública para acceder al backend.
+  # En Dev usamos LoadBalancer para poder probar la API desde Postman o el navegador.
   type: LoadBalancer

@@ -1,15 +1,46 @@
-# ==========================================================
-# CONFIGURACIÓN PARA EL NAMESPACE: dev
-# ==========================================================
+# Versión de la API de Kubernetes para recursos básicos.
 apiVersion: v1
+
+# Tipo de recurso: ResourceQuota (define los límites globales del Namespace).
 kind: ResourceQuota
+
+# Metadatos del recurso.
 metadata:
+  # Nombre del objeto ResourceQuota.
   name: dev-quota
+  # Namespace donde aplica esta cuota.
   namespace: dev
+
+# Especificación de los límites duros (hard).
 spec:
   hard:
-    requests.cpu: "1"
+    # ======================================================
+    # CUOTA DE RECURSOS (Requests)
+    # Suma máxima de recursos reservados por todos los Pods de Dev.
+    # ======================================================
+    
+    # 👇 AJUSTE FÍSICO: 500m (0.5 vCPU). 
+    # Dev no necesita mucha CPU. Así dejamos espacio para Test y Prod.
+    requests.cpu: "500m"
+    
+    # 2Gi de memoria RAM reservada para todos los Pods de Dev.
     requests.memory: "2Gi"
-    limits.cpu: "2"
-    limits.memory: "3Gi"
-    pods: "20"
+    
+    # ======================================================
+    # CUOTA DE RECURSOS (Limits)
+    # Tope máximo que pueden consumir todos los Pods si hay picos.
+    # ======================================================
+    
+    # 1 vCPU como límite total para Dev.
+    limits.cpu: "1"
+    
+    # 4Gi de memoria RAM máxima para Dev.
+    limits.memory: "4Gi"
+    
+    # ======================================================
+    # LÍMITE DE CANTIDAD DE PODS
+    # ======================================================
+    
+    # Máximo de 10 Pods. 
+    # Evita que un error de bucle en el Deployment cree cientos de Pods y sature el sistema.
+    pods: "10"

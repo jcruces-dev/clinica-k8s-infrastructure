@@ -1,0 +1,28 @@
+# Versión de la API de Kubernetes para objetos básicos del sistema.
+apiVersion: v1
+
+# Tipo de recurso: PersistentVolumeClaim.
+kind: PersistentVolumeClaim
+
+# Metadatos que identifican esta solicitud.
+metadata:
+  # 👇 CORRECCIÓN CRÍTICA: Nombre exclusivo para producción.
+  name: postgres-pvc-prod
+  # 👇 CORRECCIÓN CRÍTICA: Ahora apunta al namespace de producción.
+  namespace: prod
+
+# Especificación de los requerimientos de almacenamiento.
+spec:
+  # Modos de acceso.
+  accessModes:
+    # ReadWriteOnce.
+    - ReadWriteOnce
+  
+  # Recordar que en GCP se debe dejar 'storageClassName' vacío hace que GKE cree un disco 
+  # balanceado (Balanced PD) automáticamente, ideal para bases de datos.
+  # Definición de la cantidad de espacio solicitada.
+  resources:
+    requests:
+      # Asignamos 10 Gigabytes.
+      # Una base de datos de producción con historiales clínicos y reservas necesita espacio real.
+      storage: 10Gi

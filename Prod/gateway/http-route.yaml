@@ -1,0 +1,29 @@
+apiVersion: gateway.networking.k8s.io/v1   # Versión de la API de Gateway que habilita el recurso HTTPRoute
+kind: HTTPRoute                            # Tipo de recurso: define reglas de enrutamiento HTTP
+metadata:
+  name: test-httproute                      # Nombre único del HTTPRoute dentro del namespace
+  namespace: test                          # Namespace donde se crea (en tu caso dev)
+spec:
+  parentRefs:                              # Referencia al Gateway que usará este HTTPRoute
+  - name: test-gateway                      # Nombre del Gateway (debe coincidir con el que definiste antes)
+    namespace: test                        # Namespace donde está el Gateway
+  hostnames:
+  - "test.clinica.local"                    # Definimos el HOSTNAME esperado. Estees uno delosnombre que tenemos alojado en nuetro setting.py y no                                                tener errores. 
+  rules:                                   # Lista de reglas de enrutamiento
+  # 🔹 Primera regla: /api → backend
+  - matches:                               # Condiciones para que la regla se aplique
+    - path:                                # Coincidencia por ruta
+        type: PathPrefix                   # Tipo de coincidencia: prefijo de ruta
+        value: /api                        # Prefijo "/api" → tráfico hacia el backend
+    backendRefs:                           # Servicios de destino para esta regla
+    - name: backend-service                # Nombre del Service del backend
+      port: 8000                           # Puerto del Service backend (ejemplo: 8000)
+
+  # 🔹 Segunda regla: / → frontend
+  - matches:                               # Condiciones para que la regla se aplique
+    - path:                                # Coincidencia por ruta
+        type: PathPrefix                   # Tipo de coincidencia: prefijo de ruta
+        value: /                           # Prefijo "/" → todo el tráfico raíz
+    backendRefs:                           # Servicios de destino para esta regla
+    - name: frontend-service               # Nombre del Service al que se enviará el tráfico
+      port: 80                             # Puerto del Service (frontend expuesto en 80)

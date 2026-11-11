@@ -1,38 +1,31 @@
 # Versión de la API de Kubernetes para definir un objeto de red (Service).
 apiVersion: v1
 
-# Tipo de recurso: Service (punto de acceso de red interno para los Pods).
+# Tipo de recurso: Service.
 kind: Service
 
 # Metadatos del servicio.
 metadata:
-  # Nombre del servicio usado por el DNS interno (coincide con DB_HOST="postgres-service" en el backend).
+  # Nombre del servicio DNS interno.
   name: postgres-service
-  # Namespace donde se desplegará el servicio (AHORA ES Dev).
+  # Namespace de pruebas.
   namespace: test
 
 # Especificación de enrutamiento y puertos del servicio.
 spec:
-  # Selector para dirigir el tráfico únicamente a los Pods de PostgreSQL de Dev.
+  # Selector para dirigir el tráfico a los Pods de PostgreSQL de Test.
   selector:
     app: postgres
     env: test
 
-  # ¡LÍNEA CRUCIAL PARA STATEFULSETS!
-  # Al poner 'None', creamos un "Headless Service". 
-  # Esto hace que Kubernetes no le asigne una IP fija, sino que le dé un nombre DNS 
-  # único a cada Pod (ej. postgres-statefulset-0.postgres-service), ideal para bases de datos.
+  # Headless Service (sin IP fija) para que los Pods tengan identidad DNS propia.
   clusterIP: None
 
   # Definición de los puertos expuestos.
   ports:
-    # Protocolo de red utilizado.
+    # Protocolo de red.
     - protocol: TCP
-      # Puerto expuesto dentro de la red del clúster.
+      # Puerto expuesto internamente.
       port: 5432
-      # Puerto del contenedor destino.
+      # Puerto del contenedor.
       targetPort: 5432
-
-  # NOTA: Cuando se usa 'clusterIP: None', ya no es necesario especificar 'type: ClusterIP'.
-  # El servicio es interno por defecto.
-

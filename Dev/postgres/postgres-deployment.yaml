@@ -1,19 +1,37 @@
+# Versión de la API de Kubernetes para definir Deployments.
 apiVersion: apps/v1
+
+# Tipo de recurso: Deployment.
 kind: Deployment
+
+# Metadatos del recurso.
 metadata:
+  # Nombre del Deployment.
   name: postgres-deployment
+  # Namespace de desarrollo.
   namespace: dev
+  # Etiquetas del recurso.
   labels:
     app: postgres
     env: dev
 
+# Especificación del Deployment.
 spec:
+  # 1 réplica para desarrollo.
   replicas: 1
+  
+  # 👇 MEJORA CRÍTICA: Estrategia Recreate.
+  # Evita que dos Pods intenten usar el mismo disco al mismo tiempo durante una actualización.
+  strategy:
+    type: Recreate
+
+  # Selector que vincula el Deployment con los Pods.
   selector:
     matchLabels:
       app: postgres
       env: dev
 
+  # Plantilla para crear los Pods.
   template:
     metadata:
       labels:
@@ -22,16 +40,18 @@ spec:
     spec:
       containers:
         - name: postgres
+          # Imagen oficial de PostgreSQL 15.
           image: postgres:15
           ports:
             - containerPort: 5432
           
+          # Variables de entorno.
           env:
-            # SOLUCIÓN PARA GCP: Evita el error de la carpeta 'lost+found'
+            # SOLUCIÓN PARA GCP: Evita el error de la carpeta 'lost+found' al montar el disco.
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
             
-            # Credenciales obtenidas desde el Secret de Postgres
+            # Credenciales obtenidas desde el Secret de Postgres.
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
@@ -48,21 +68,51 @@ spec:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
 
-          # Montaje del disco y la configuración
+          # Sondas de salud (Healthchecks).
+          # Verifica si el motor de Postgres está listo para aceptar conexiones.
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          # Recursos explícitos (coinciden con el LimitRange de Dev).
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+          # Montaje del disco y la configuración.
           volumeMounts:
+            # Montaje del disco persistente.
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
+            # Montaje del archivo de configuración principal.
             - name: postgres-config-volume
               mountPath: /etc/postgresql/conf.d/postgresql.conf
               subPath: postgresql.conf
+            # Montaje del archivo de reglas de acceso.
             - name: postgres-config-volume
               mountPath: /etc/postgresql/conf.d/pg_hba.conf
               subPath: pg_hba.conf
 
+      # Definición de volúmenes.
       volumes:
+        # Volumen conectado al almacenamiento persistente (PVC).
         - name: postgres-storage
           persistentVolumeClaim:
+            # Asegúrate de que este nombre coincida con tu archivo PVC (postgres-pvc-v2).
             claimName: postgres-pvc-v2
+        # Volumen conectado al ConfigMap que creamos antes.
         - name: postgres-config-volume
           configMap:
             name: postgres-config

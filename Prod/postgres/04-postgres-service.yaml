@@ -1,0 +1,33 @@
+# Versión de la API de Kubernetes para definir un objeto de red (Service).
+apiVersion: v1
+
+# Tipo de recurso: Service.
+kind: Service
+
+# Metadatos del servicio.
+metadata:
+  # El nombre del servicio se mantiene igual porque el backend lo busca así.
+  name: postgres-service
+  # Ahora apunta al namespace de producción.
+  namespace: prod
+
+# Especificación de enrutamiento y puertos del servicio.
+spec:
+  # Etiqueta de entorno actualizada a 'prod'.
+  selector:
+    app: postgres
+    env: prod
+
+  # Al igual que en Test, usamos 'None' para mantener la identidad de red de los Pods.
+  # Esto garantiza que si escalamos la base de datos en el futuro (réplicas de lectura), 
+  # los nodos se encuentren mediante DNS.
+  clusterIP: None
+
+  # Definición de los puertos expuestos.
+  ports:
+    # Protocolo de red.
+    - protocol: TCP
+      # Puerto expuesto internamente (usado por el backend en producción).
+      port: 5432
+      # Puerto del contenedor.
+      targetPort: 5432

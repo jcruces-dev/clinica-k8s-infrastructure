@@ -1,15 +1,43 @@
-# ==========================================================
-# CONFIGURACIÓN PARA EL NAMESPACE: test
-# ==========================================================
+# Versión de la API de Kubernetes para recursos básicos.
 apiVersion: v1
+
+# Tipo de recurso: ResourceQuota.
 kind: ResourceQuota
+
+# Metadatos del recurso.
 metadata:
+  # Nombre del objeto ResourceQuota.
   name: test-quota
+  # Namespace donde aplica esta cuota.
   namespace: test
+
+# Especificación de los límites duros.
 spec:
   hard:
+    # ======================================================
+    # CUOTA DE RECURSOS (Requests)
+    # ======================================================
+    
+    # 👇 AJUSTE FÍSICO: 1 vCPU. 
+    # Test tiene más cuota que Dev para poder correr las pruebas de carga.
     requests.cpu: "1"
-    requests.memory: "2Gi"
+    
+    # 4Gi de memoria RAM reservada para Test.
+    requests.memory: "4Gi"
+    
+    # ======================================================
+    # CUOTA DE RECURSOS (Limits)
+    # ======================================================
+    
+    # 2 vCPUs como límite máximo total para Test.
     limits.cpu: "2"
-    limits.memory: "3Gi"
+    
+    # 8Gi de memoria RAM máxima para Test.
+    limits.memory: "8Gi"
+    
+    # ======================================================
+    # LÍMITE DE CANTIDAD DE PODS
+    # ======================================================
+    
+    # Máximo de 20 Pods (permite correr más pruebas simultáneas).
     pods: "20"

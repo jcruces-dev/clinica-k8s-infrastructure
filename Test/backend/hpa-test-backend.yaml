@@ -1,22 +1,36 @@
+# Versión de la API de Kubernetes para el autoescalado (v2 permite más métricas y comportamientos).
 apiVersion: autoscaling/v2
+
+# Tipo de recurso: HorizontalPodAutoscaler (HPA).
 kind: HorizontalPodAutoscaler
+
+# Metadatos del recurso.
 metadata:
+  # Nombre del HPA.
   name: backend-hpa
+  # Namespace de pruebas.
   namespace: test
+
+# Especificación del Autoescalado.
 spec:
-  # A qué Deployment va a escalar
+  # Referencia al Deployment que se va a escalar.
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: backend-deployment
-  # Límites de réplicas (mínimo 1 para no apagar todo, máximo 5 para no gastar de más)
+
+  # En Test, 1 réplica es suficiente para economizar recursos.
   minReplicas: 1
+  # Máximo 5 réplicas para no saturar el nodo de pruebas.
   maxReplicas: 5
+
+  # Métricas utilizadas para decidir cuándo escalar.
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        # Si el uso promedio de CPU de los Pods supera el 50%, se crean más réplicas
-        averageUtilization: 50
+    - type: Resource
+      resource:
+        # Escalamos basado en el uso de CPU.
+        name: cpu
+        target:
+          type: Utilization
+          # Si el uso promedio de CPU supera el 50%, se crean más réplicas.
+          averageUtilization: 50

@@ -1,11 +1,25 @@
+# Versión de la API de Kubernetes para objetos básicos del sistema.
 apiVersion: v1
+
+# Tipo de recurso: PersistentVolumeClaim (solicitud de almacenamiento).
 kind: PersistentVolumeClaim
+
+# Metadatos que identifican esta solicitud.
 metadata:
+  # Nombre único del PVC. Debe coincidir con el 'claimName' de tu Deployment de Postgres en Dev.
   name: postgres-pvc-v2
+  # Namespace de desarrollo.
   namespace: dev
+
+# Especificación de los requerimientos de almacenamiento.
 spec:
+  # Modos de acceso.
   accessModes:
+    # ReadWriteOnce: El disco solo puede ser montado por un nodo a la vez.
     - ReadWriteOnce
+  
+  # Definición de la cantidad de espacio solicitada.
   resources:
     requests:
+      # 1 Gigabyte es suficiente para el entorno de desarrollo.
       storage: 1Gi

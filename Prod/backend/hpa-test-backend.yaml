@@ -1,0 +1,58 @@
+# Versión de la API de Kubernetes para el autoescalado.
+apiVersion: autoscaling/v2
+
+# Tipo de recurso: HorizontalPodAutoscaler (HPA).
+kind: HorizontalPodAutoscaler
+
+# Metadatos del recurso.
+metadata:
+  # Nombre del HPA.
+  name: backend-hpa
+  # Ahora apunta al namespace de producción.
+  namespace: prod
+
+# Especificación del Autoescalado.
+spec:
+  # Referencia al Deployment que se va a escalar.
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-deployment
+
+  # minReplicas en 2.
+  # Garantiza Alta Disponibilidad (HA). Si un nodo falla, el otro sigue atendiendo.
+  minReplicas: 2
+  
+  # maxReplicas en 10.
+  # Permite que el backend escale hasta 10 Pods si hay un pico masivo de usuarios.
+  maxReplicas: 10
+
+  # Métricas utilizadas para decidir cuándo escalar.
+  metrics:
+    - type: Resource
+      resource:
+        # Escalamos basado en el uso de CPU.
+        name: cpu
+        target:
+          type: Utilization
+          # Corrección a PROD: 70%.
+          # Es un umbral más seguro. Si está al 50% no hace falta gastar en más Pods.
+          averageUtilization: 70
+
+  # Ojo acá: CONFIGURACIÓN AVANZADA (Solo en Prod):
+  # Controla la velocidad a la que escala (evita el "Flapping").
+  behavior:
+    # Reglas para escalar hacia arriba (crear Pods).
+    scaleUp:
+      # Ventana de estabilización: cuánto tiempo debe mantenerse la métrica alta antes de actuar.
+      stabilizationWindowSeconds: 0
+      policies:
+        # Puede crear 2 Pods o el 100% de los Pods actuales (lo que sea mayor) cada 60 segundos.
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+    # Reglas para escalar hacia abajo (destruir Pods).
+    scaleDown:
+      # Espera 5 minutos (300s) antes de destruir un Pod.
+      # Esto evita que si hay un pico de 1 minuto, Kubernetes destruya Pods inmediatamente después.
+      stabilizationWindowSeconds: 300
