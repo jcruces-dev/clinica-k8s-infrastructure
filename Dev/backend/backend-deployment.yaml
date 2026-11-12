@@ -41,7 +41,7 @@ spec:
       containers:
         - name: backend
           # Imagen del backend (el pipeline de GitOps actualizará este tag).
-          image: ghcr.io/jcruces-dev/backend-clinica-bp:sha-fe150c291a57c140f016504e297bdf8e6fb33517
+          image: ghcr.io/jcruces-dev/backend-clinica-bp:sha-b01ea029a7f19b92ba49218b87399e4983d0d5f1
           ports:
             - containerPort: 8000
 
