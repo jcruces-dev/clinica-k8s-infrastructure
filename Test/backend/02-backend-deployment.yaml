@@ -35,7 +35,7 @@ spec:
       containers:
         - name: backend
           # Imagen del backend.
-          image: ghcr.io/jcruces-dev/backend-clinica-bp:sha-cd30613bea1277e61a18c95d79d37f38cfe54b8f
+          image: ghcr.io/jcruces-dev/backend-clinica-bp:sha-c786b3fe1bf5f0b543903236e13cdbf33bf8c718
           ports:
             - containerPort: 8000
 
