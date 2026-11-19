@@ -18,7 +18,7 @@ services:
     # Persistencia de los datos: guarda los datos de la BD en un volumen de Docker.
     volumes:
       # Ruta actualizada y requerida para PostgreSQL 18 (¡el cambio que solucionamos!).
-      - db_data:/var/lib/postgresql
+      - db_data:/var/lib/postgresql/data
     # Conecta este contenedor a la red interna de Docker llamada "app_net".
     networks:
       - app_net
@@ -48,7 +48,7 @@ services:
       - DB_HOST=db
     # Sincroniza el código de tu computadora con el contenedor (para ver cambios en vivo sin reiniciar).
     volumes:
-      - "./Clinica_Repositorio_BACKEND_DRF:/app"
+      - ./Clinica_Repositorio_BACKEND_DRF:/app
     # Mapea el puerto 8000 de tu PC al puerto 8000 del contenedor (para entrar desde el navegador).
     ports:
       - "8000:8000"
@@ -59,7 +59,6 @@ services:
     networks:
       app_net:
         aliases:
-          # Permite que Nginx (el frontend) encuentre este backend usando la URL 'http://backend-service:8000'.
           - backend-service
     # Reinicia el contenedor automáticamente si falla o al iniciar Docker.
     restart: unless-stopped
@@ -79,7 +78,9 @@ services:
       - "80:80"
     # Monta los archivos estáticos (HTML/JS) en modo lectura (ro) dentro de Nginx.
     volumes:
-      - "./Clinica_Frontend_JavaScript/Clinica_HTML:/usr/share/nginx/html:ro"
+      - ./Clinica_Frontend_JavaScript/Clinica_HTML:/usr/share/nginx/html:ro
+    # Este es el volumen de Dev/Test.
+      - ./Clinica_Frontend_JavaScript/default.conf:/etc/nginx/conf.d/default.conf:ro
     # Conecta el frontend a la red interna.
     networks:
       - app_net

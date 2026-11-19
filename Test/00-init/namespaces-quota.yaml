@@ -1,43 +1,24 @@
-# Versión de la API de Kubernetes para recursos básicos.
+# Versión de la API de Kubernetes para objetos básicos del núcleo (como ResourceQuota).
 apiVersion: v1
-
-# Tipo de recurso: ResourceQuota.
+# Tipo de recurso de Kubernetes: define una cuota que limita el consumo total en un namespace.
 kind: ResourceQuota
-
-# Metadatos del recurso.
+# Metadatos que identifican y ubican el objeto dentro del clúster.
 metadata:
-  # Nombre del objeto ResourceQuota.
-  name: test-quota
-  # Namespace donde aplica esta cuota.
-  namespace: test
-
-# Especificación de los límites duros.
+  # Nombre del recurso ResourceQuota.
+  name: prod-quota
+  # Namespace donde se aplicarán estas cuotas de recursos.
+  namespace: prod
+# Especificación principal del recurso.
 spec:
+  # Límites máximos estrictos ("hard") permitidos para todo el namespace.
   hard:
-    # ======================================================
-    # CUOTA DE RECURSOS (Requests)
-    # ======================================================
-    
-    # 👇 AJUSTE FÍSICO: 1 vCPU. 
-    # Test tiene más cuota que Dev para poder correr las pruebas de carga.
-    requests.cpu: "1"
-    
-    # 4Gi de memoria RAM reservada para Test.
-    requests.memory: "4Gi"
-    
-    # ======================================================
-    # CUOTA DE RECURSOS (Limits)
-    # ======================================================
-    
-    # 2 vCPUs como límite máximo total para Test.
-    limits.cpu: "2"
-    
-    # 8Gi de memoria RAM máxima para Test.
-    limits.memory: "8Gi"
-    
-    # ======================================================
-    # LÍMITE DE CANTIDAD DE PODS
-    # ======================================================
-    
-    # Máximo de 20 Pods (permite correr más pruebas simultáneas).
-    pods: "20"
+    # Total máximo de CPU reservada (requests) que pueden sumar todos los pods en prod (1500m = 1.5 vCPU).
+    requests.cpu: "1500m"
+    # Total máximo de memoria RAM reservada (requests) que pueden sumar todos los pods en prod (6 GiB).
+    requests.memory: "6Gi"
+    # Total máximo de CPU permitida como tope (limits) en los contenedores de prod (8 vCPUs).
+    limits.cpu: "8"
+    # Total máximo de memoria RAM permitida como tope (limits) en los contenedores de prod (12 GiB).
+    limits.memory: "12Gi"
+    # Cantidad máxima total de pods permitidos en el namespace prod (incluyendo pods en creación o terminación).
+    pods: "50"
