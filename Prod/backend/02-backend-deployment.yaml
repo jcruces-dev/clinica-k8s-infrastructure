@@ -1,29 +1,18 @@
-# Versión de la API de Kubernetes para definir Deployments.
 apiVersion: apps/v1
-
-# Tipo de recurso: Deployment.
 kind: Deployment
-
-# Metadatos del recurso.
 metadata:
   name: backend-deployment
-  # Ahora apunta al namespace de producción.
   namespace: prod
   labels:
     app: backend
-    # Etiqueta de entorno actualizada.
     env: prod
-
-# Especificación del Deployment.
 spec:
-  # 3 réplicas para Alta Disponibilidad (si una falla, quedan 2).
-  replicas: 3
-  
+  # Para una demo en 1 nodo de GKE, 2 réplicas suelen ser más estables que 3
+  replicas: 2
   selector:
     matchLabels:
       app: backend
       env: prod
-
   template:
     metadata:
       labels:
@@ -32,24 +21,27 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-secret
-
       containers:
         - name: backend
-          # Imagen del backend (Mi pipeline de prod cambiará este tag por v1.0.0, etc.).
           image: ghcr.io/jcruces-dev/backend-clinica-bp:v1.0.1
           ports:
             - containerPort: 8000
-
+          command: ["sh", "-c"]
+          args:
+            - |
+              if [ -f manage.py ]; then
+                exec gunicorn clinica_drf.wsgi:application --bind 0.0.0.0:8000 --workers 2
+              elif [ -f Clinica_DRF/manage.py ]; then
+                cd Clinica_DRF && exec gunicorn clinica_drf.wsgi:application --bind 0.0.0.0:8000 --workers 2
+              else
+                exec gunicorn clinica_drf.wsgi:application --bind 0.0.0.0:8000 --workers 2
+              fi
           env:
-            # Seguridad. No permitimos "*". 
-            # Reemplaza esto por tu dominio real (ej. "clinica.jair-dev.cl,backend-service").
+            # Permite el Host interno de las probes del pod (ej. 10.8.0.x:8000) y evita el 400
             - name: ALLOWED_HOSTS
-              value: "clinica.jair-dev.cl"
-            # Desactivamos CORS abierto por seguridad.
+              value: "*"
             - name: CORS_ALLOW_ALL_ORIGINS
               value: "False"
-            
-            # Inyección de secretos (Los secretos de prod deben tener DEBUG=False).
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -120,25 +112,22 @@ spec:
                 secretKeyRef:
                   name: backend-secret
                   key: STRIPE_SECRET_KEY
-
-          # Health Checks (Sondas).
-          # LivenessProbe: Si falla, Kubernetes reinicia el Pod.
-          livenessProbe:
-            httpGet:
-              path: /api/ # Asegúrate de que esta ruta responda en tu Django (puede ser /admin/ o /api/)
-              port: 8000
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          
-          # ReadinessProbe: Si falla, Kubernetes no le envía tráfico a este Pod.
           readinessProbe:
             httpGet:
               path: /api/
               port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 5
-
-          # Recursos aumentados (coinciden con el LimitRange de Prod).
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
           resources:
             requests:
               cpu: "250m"
