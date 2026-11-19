@@ -41,7 +41,7 @@ spec:
       containers:
         - name: frontend
           # Imagen del frontend (Nginx).
-          image: ghcr.io/jcruces-dev/frontend-clinica-bp:sha-624b8f686740a7b4a4c0fddfd1c20da601b792dc
+          image: ghcr.io/jcruces-dev/frontend-clinica-bp:sha-0a368d9d912f2b28f3b7b54051628e3c41b56684
           ports:
             - containerPort: 80
             
