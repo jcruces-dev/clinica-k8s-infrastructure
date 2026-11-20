@@ -24,6 +24,10 @@ spec:
       containers:
         - name: backend
           image: ghcr.io/jcruces-dev/backend-clinica-bp:v1.0.2
+<<<<<<< HEAD
+          imagePullPolicy: IfNotPresent
+=======
+>>>>>>> origin/main
           ports:
             - containerPort: 8000
           command: ["sh", "-c"]
