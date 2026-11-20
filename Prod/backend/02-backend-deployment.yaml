@@ -23,7 +23,8 @@ spec:
         - name: ghcr-secret
       containers:
         - name: backend
-          image: ghcr.io/jcruces-dev/backend-clinica-bp:v1.0.1
+          image: ghcr.io/jcruces-dev/backend-clinica-bp:v1.0.2
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           command: ["sh", "-c"]
