@@ -1,40 +1,20 @@
-# Versión de la API de Kubernetes para objetos básicos del núcleo (como LimitRange).
 apiVersion: v1
-# Tipo de recurso de Kubernetes: define rangos y valores por defecto para recursos de pods/contenedores.
 kind: LimitRange
-# Metadatos que identifican y ubican el objeto dentro del clúster.
 metadata:
-  # Nombre del recurso LimitRange.
   name: app-limits
-  # Namespace de producción donde se aplicará esta regla.
-  namespace: prod
-# Especificación principal del LimitRange.
+  namespace: test
 spec:
-  # Lista de reglas de límites aplicables en el namespace.
   limits:
-    # Aplica la regla a cada contenedor individual (en vez de a todo el Pod o a un PVC).
     - type: Container
-      # Valores por defecto de CPU y memoria asignados si el contenedor no especifica "requests".
       defaultRequest:
-        # CPU reservada por defecto por contenedor (250m = 0.25 vCPU).
         cpu: "250m"
-        # Memoria RAM reservada por defecto por contenedor (256 MiB).
         memory: "256Mi"
-      # Valores por defecto de CPU y memoria asignados si el contenedor no especifica "limits".
       default:
-        # Límite máximo de CPU por defecto por contenedor (500m = 0.5 vCPU).
         cpu: "500m"
-        # Límite máximo de memoria RAM por defecto por contenedor (512 MiB).
         memory: "512Mi"
-      # Valores mínimos permitidos para requests o limits de un contenedor en este namespace.
       min:
-        # CPU mínima permitida (100m = 0.1 vCPU).
         cpu: "100m"
-        # Memoria RAM mínima permitida (128 MiB).
         memory: "128Mi"
-      # Valores máximos permitidos para limits de un solo contenedor en este namespace.
       max:
-        # CPU máxima permitida para un contenedor (2000m = 2 vCPUs).
         cpu: "2000m"
-        # Memoria RAM máxima permitida para un contenedor (2 GiB).
         memory: "2Gi"
