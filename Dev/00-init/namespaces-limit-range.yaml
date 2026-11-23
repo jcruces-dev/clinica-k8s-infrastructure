@@ -6,42 +6,31 @@ kind: LimitRange
 
 # Metadatos del recurso.
 metadata:
-  # Nombre del LimitRange.
   name: app-limits
-
-  # Namespace de desarrollo.
   namespace: dev
 
 # Configuración principal.
 spec:
   limits:
-  # Regla aplicada a cada contenedor individual.
   - type: Container
-
     # Valores por defecto para requests (Dev es ligero).
     defaultRequest:
-      # 50m = 0.05 vCPU.
       cpu: "50m"
-      # 64Mi de memoria.
       memory: "64Mi"
 
     # Valores por defecto para limits.
     default:
-      # 250m = 0.25 vCPU.
       cpu: "250m"
-      # 256Mi de memoria.
       memory: "256Mi"
 
     # Límites mínimos permitidos.
     min:
-      # 20m de CPU.
       cpu: "20m"
-      # 32Mi de RAM.
       memory: "32Mi"
 
     # Límites máximos permitidos para un solo contenedor en Dev.
     max:
-      # 500m. Evita que un solo contenedor se coma toda la cuota de Dev.
-      cpu: "500m"
-      # 512Mi de RAM.
-      memory: "512Mi"
+      # Subimos a 1000m para que quepa el Backend sin errores.
+      cpu: "1000m"
+      # Subimos a 1Gi para dar espacio a Django y Postgres.
+      memory: "1Gi"
