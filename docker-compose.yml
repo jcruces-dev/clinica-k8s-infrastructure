@@ -18,7 +18,7 @@ services:
     # Persistencia de los datos: guarda los datos de la BD en un volumen de Docker.
     volumes:
       # Ruta actualizada y requerida para PostgreSQL 18 (¡el cambio que solucionamos!).
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     # Conecta este contenedor a la red interna de Docker llamada "app_net".
     networks:
       - app_net
